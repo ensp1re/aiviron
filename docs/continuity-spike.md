@@ -6,9 +6,9 @@
 ## Initialize a project
 
 ```bash
-npx arenv . --agents codex,claude
+npx aiviron . --agents codex,claude
 # equivalent explicit command
-npx arenv init . --agents codex,claude
+npx aiviron init . --agents codex,claude
 ```
 
 Initialization creates the provider-neutral `.ai/` environment and managed sections in `AGENTS.md` and `CLAUDE.md`. Existing human instructions outside the managed section are preserved. The generated configuration explicitly selects installed subscription authentication and disables API-key requirements. `--dry-run` returns the exact file plan without creating a directory, initializing Git, or writing files.
@@ -16,7 +16,7 @@ Initialization creates the provider-neutral `.ai/` environment and managed secti
 ## One-command workspace start
 
 ```bash
-npx arenv work openai/codex \
+npx aiviron work openai/codex \
   --objective "Fix the selected issue and verify the change" \
   --agent codex
 ```
@@ -28,9 +28,9 @@ The command refuses an existing destination, requires an initial commit, creates
 ## Current task and checkpoints
 
 ```bash
-npx arenv task status
+npx aiviron task status
 
-npx arenv task checkpoint \
+npx aiviron task checkpoint \
   --summary "Implemented the timeout guard" \
   --completed "Reproduced the failure" \
   --completed "Implemented the guard" \
@@ -51,7 +51,7 @@ The human-readable packet is persisted at `.ai/state/tasks/<task-id>/resume.md`.
 Create a handoff without launching anything:
 
 ```bash
-npx arenv task handoff \
+npx aiviron task handoff \
   --to claude \
   --summary "Codex limit reached after implementation" \
   --next "Add the regression test"
@@ -60,16 +60,16 @@ npx arenv task handoff \
 Create the capsule and immediately enter the destination's interactive CLI:
 
 ```bash
-npx arenv task handoff --to claude --launch
+npx aiviron task handoff --to claude --launch
 ```
 
 Resume or launch independently:
 
 ```bash
-npx arenv task resume --agent codex
-npx arenv task launch --agent codex
-npx arenv task launch --agent claude
-npx arenv task launch --agent codex-oss --local-provider ollama
+npx aiviron task resume --agent codex
+npx aiviron task launch --agent codex
+npx aiviron task launch --agent claude
+npx aiviron task launch --agent codex-oss --local-provider ollama
 ```
 
 Launch adapters inject the resume packet as the first interactive prompt but preserve the runtime's normal approval and sandbox behavior. They do not pass bypass flags. Use `--dry-run` to inspect a redacted invocation without starting an agent.

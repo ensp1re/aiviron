@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.create-agent.dev/v1alpha1/common.schema.json",
-  "title": "ARE common contract definitions",
+  "$id": "https://schemas.aiviron.dev/v1alpha1/common.schema.json",
+  "title": "Aiviron common contract definitions",
   "$defs": {
     "opaqueId": {
       "type": "string",

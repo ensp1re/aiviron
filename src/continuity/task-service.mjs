@@ -13,7 +13,7 @@ import {
 import { opaqueId, sha256, slugify, stableOpaqueId } from "./identity.mjs";
 import { putObject, readCurrentTask, statePaths, writeJsonAtomic, writeTextAtomic } from "./store.mjs";
 
-const schemaVersion = "are-task-state/v1alpha1";
+const schemaVersion = "aiviron-task-state/v1alpha1";
 const runtimeVersion = "0.1.0";
 
 function now(clock) {
@@ -51,7 +51,7 @@ export async function startTask({ cwd = process.cwd(), objective, agent, branch,
       throw new Error(`Task ${active.taskId} is already active; resume or finish it before starting another task`);
     }
   } catch (error) {
-    if (!/No active Arenv task exists/.test(error.message)) throw error;
+    if (!/No active Aiviron task exists/.test(error.message)) throw error;
   }
 
   const remote = await originUrl(repoRoot);
@@ -62,7 +62,7 @@ export async function startTask({ cwd = process.cwd(), objective, agent, branch,
   const taskId = opaqueId("tsk");
   let selectedBranch = await currentBranch(repoRoot);
   if (createTaskBranch) {
-    selectedBranch = branch || `are/${slugify(objective)}-${taskId.slice(-8).toLowerCase()}`;
+    selectedBranch = branch || `aiviron/${slugify(objective)}-${taskId.slice(-8).toLowerCase()}`;
     await createBranch(repoRoot, selectedBranch);
   }
 
@@ -164,7 +164,7 @@ export async function checkpointTask({
   const entries = await storeArtifacts(repoRoot, task, checkpoint, patch);
   const capsuleId = opaqueId("cap");
   const capsule = {
-    apiVersion: "dev.create-agent/capsule/v1alpha1",
+    apiVersion: "dev.aiviron/capsule/v1alpha1",
     kind: "HandoffCapsule",
     capsuleId,
     createdAt: checkpoint.createdAt,
@@ -216,7 +216,7 @@ export async function checkpointTask({
 export function renderResumePacket(task, { drifted = false, snapshot } = {}) {
   const latest = task.checkpoints.at(-1);
   const lines = [
-    `# Resume Arenv task ${task.taskId}`,
+    `# Resume Aiviron task ${task.taskId}`,
     "",
     `Objective: ${task.objective}`,
     `Status: ${task.status}`,

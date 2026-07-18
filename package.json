@@ -1,5 +1,5 @@
 {
-  "name": "arenv",
+  "name": "aiviron",
   "version": "0.1.0",
   "type": "module",
   "description": "A shared project workspace for better AI-assisted development",
@@ -18,11 +18,11 @@
   "author": "0xhumb",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ensp1re/arenv.git"
+    "url": "git+https://github.com/ensp1re/aiviron.git"
   },
-  "homepage": "https://github.com/ensp1re/arenv#readme",
+  "homepage": "https://github.com/ensp1re/aiviron#readme",
   "bugs": {
-    "url": "https://github.com/ensp1re/arenv/issues"
+    "url": "https://github.com/ensp1re/aiviron/issues"
   },
   "files": [
     "bin/",
@@ -32,9 +32,7 @@
     "docs/continuity-spike.md"
   ],
   "bin": {
-    "arenv": "bin/arenv.mjs",
-    "agentctl": "bin/agentctl.mjs",
-    "create-agent": "bin/create-agent.mjs"
+    "aiviron": "bin/aiviron.mjs"
   },
   "publishConfig": {
     "access": "public"
@@ -43,9 +41,7 @@
     "test": "node --test tests/environment-generator.test.mjs tests/continuity-spike.test.mjs tests/schema-conformance.test.mjs",
     "prepublishOnly": "npm test",
     "test:schemas": "node --test tests/schema-conformance.test.mjs",
-    "arenv": "node bin/arenv.mjs",
-    "create-agent": "node bin/create-agent.mjs",
-    "agentctl": "node bin/agentctl.mjs"
+    "aiviron": "node bin/aiviron.mjs"
   },
   "devDependencies": {
     "ajv": "8.20.0",

@@ -1,37 +1,37 @@
-# Arenv
+# Aiviron
 
 **A shared project workspace for better AI-assisted development.**
 
-Arenv gives AI coding agents a consistent workspace for understanding a project, tracking the current task, preserving progress, and continuing work across tools and sessions.
+Aiviron gives AI coding agents a consistent workspace for understanding a project, tracking the current task, preserving progress, and continuing work across tools and sessions.
 
 ```bash
 # Initialize the current repository
-npx arenv .
+npx aiviron .
 
 # Start durable work
-npx arenv task start --objective "Implement the selected change" --agent primary
+npx aiviron task start --objective "Implement the selected change" --agent primary
 
 # Checkpoint and switch agents later
-npx arenv task handoff --to next-agent \
+npx aiviron task handoff --to next-agent \
   --summary "Implementation complete; verification remains" \
   --next "Run the focused regression suite"
 ```
 
-Arenv generates a canonical `.ai/` workspace plus agent instruction files without overwriting existing human instructions. Mutable task state stays in `.ai/state/` and is excluded from Git.
+Aiviron generates a canonical `.ai/` workspace plus agent instruction files without overwriting existing human instructions. Mutable task state stays in `.ai/state/` and is excluded from Git.
 
 To acquire a repository and start a task in one operation:
 
 ```bash
-npx arenv work owner/repository \
+npx aiviron work owner/repository \
   --objective "Implement the selected change" \
   --agent primary
 ```
 
 The GitHub path uses the authenticated `gh` account. It clones directly when writable and otherwise creates and clones your fork. See the [workflow guide](docs/workflow.md) and [continuity guide](docs/continuity-spike.md).
 
-## What Arenv owns
+## What Aiviron owns
 
-Arenv leaves each agent's interface and execution flow intact. It provides the shared project layer around them:
+Aiviron leaves each agent's interface and execution flow intact. It provides the shared project layer around them:
 
 - repository-native agent instructions;
 - the active objective and current agent;
@@ -46,13 +46,13 @@ It does not copy private reasoning, chat history, authentication, or permissions
 ```bash
 npm install
 npm test
-npm run arenv -- --dry-run
-npm run arenv -- .
-npm run arenv -- task start --objective "Describe the task" --agent primary
-npm run arenv -- task handoff --to next-agent
+npm run aiviron -- --dry-run
+npm run aiviron -- .
+npm run aiviron -- task start --objective "Describe the task" --agent primary
+npm run aiviron -- task handoff --to next-agent
 ```
 
-The public source includes the runtime, versioned schemas, focused documentation, and runtime tests. The legacy `create-agent` and `agentctl` executable aliases remain available for compatibility.
+The public source includes the runtime, versioned schemas, focused documentation, and runtime tests.
 
 ## Current limits
 

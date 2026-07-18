@@ -32,7 +32,7 @@ export async function readCurrentTask(repoRoot) {
   try {
     return await readJson(statePaths(repoRoot).current);
   } catch (error) {
-    if (error.code === "ENOENT") throw new Error("No active Arenv task exists in this repository");
+    if (error.code === "ENOENT") throw new Error("No active Aiviron task exists in this repository");
     throw error;
   }
 }
@@ -52,6 +52,6 @@ export async function putObject(repoRoot, value, mediaType) {
     digest,
     mediaType,
     size: bytes.byteLength,
-    uri: `are-object://sha256/${hex}`
+    uri: `aiviron-object://sha256/${hex}`
   };
 }

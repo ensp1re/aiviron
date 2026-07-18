@@ -31,7 +31,7 @@ export async function resolveRepositoryRoot(cwd) {
 
 export async function currentHead(repoRoot) {
   const output = await git(repoRoot, ["rev-parse", "HEAD"], { allowFailure: true });
-  if (!output) throw new Error("The repository must have an initial commit before starting an Arenv task");
+  if (!output) throw new Error("The repository must have an initial commit before starting an Aiviron task");
   return output.trim();
 }
 
@@ -126,12 +126,12 @@ export async function workingPatch(repoRoot) {
     const absolute = resolve(repoRoot, path);
     const stat = await lstat(absolute);
     if (!stat.isFile() || stat.size > 1024 * 1024) {
-      sections.push(`\nARE untracked artifact: ${path} (${stat.size} bytes; content omitted)\n`);
+      sections.push(`\nAiviron untracked artifact: ${path} (${stat.size} bytes; content omitted)\n`);
       continue;
     }
     const content = await readFile(absolute);
     sections.push(`\ndiff --git a/${path} b/${path}\nnew file mode 100644\n--- /dev/null\n+++ b/${path}\n`);
-    sections.push(`ARE-UNTRACKED-SHA256 ${createHash("sha256").update(content).digest("hex")}\n`);
+    sections.push(`AIVIRON-UNTRACKED-SHA256 ${createHash("sha256").update(content).digest("hex")}\n`);
   }
   return sections.join("");
 }

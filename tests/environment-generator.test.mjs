@@ -18,18 +18,18 @@ async function git(cwd, ...args) {
 }
 
 async function fixtureRepository() {
-  const directory = await mkdtemp(join(tmpdir(), "are-environment-"));
+  const directory = await mkdtemp(join(tmpdir(), "aiviron-environment-"));
   await git(directory, "init", "-b", "main");
-  await git(directory, "config", "user.name", "ARE Test");
-  await git(directory, "config", "user.email", "are@example.invalid");
+  await git(directory, "config", "user.name", "Aiviron Test");
+  await git(directory, "config", "user.email", "aiviron@example.invalid");
   await writeFile(join(directory, "package.json"), `${JSON.stringify({ name: "fixture", scripts: { test: "node --test" } }, null, 2)}\n`);
   await git(directory, "add", "package.json");
   await git(directory, "commit", "-m", "initial fixture");
   return directory;
 }
 
-test("create-agent initializes a new subscription-first Git project", async (t) => {
-  const parent = await mkdtemp(join(tmpdir(), "are-new-project-"));
+test("Aiviron initializes a new subscription-first Git project", async (t) => {
+  const parent = await mkdtemp(join(tmpdir(), "aiviron-new-project-"));
   const target = join(parent, "checkout-service");
   t.after(() => rm(parent, { recursive: true, force: true }));
 
@@ -71,17 +71,17 @@ test("initializer preserves human instructions and remains rerunnable", async (t
   const first = await readFile(join(repo, "AGENTS.md"), "utf8");
   assert.match(first, /Existing repository rules/);
   assert.match(first, /Keep this paragraph/);
-  assert.equal(first.match(/create-agent:managed:start/g)?.length, 1);
+  assert.equal(first.match(/aiviron:managed:start/g)?.length, 1);
 
   const repeated = await initializeEnvironment({ cwd: repo, agents: ["codex", "claude"] });
   const second = await readFile(join(repo, "AGENTS.md"), "utf8");
   assert.equal(repeated.projectId, initial.projectId);
   assert.match(second, /Existing repository rules/);
-  assert.equal(second.match(/create-agent:managed:start/g)?.length, 1);
+  assert.equal(second.match(/aiviron:managed:start/g)?.length, 1);
 });
 
 test("dry-run plans a new project without creating the directory", async (t) => {
-  const parent = await mkdtemp(join(tmpdir(), "are-init-dry-run-"));
+  const parent = await mkdtemp(join(tmpdir(), "aiviron-init-dry-run-"));
   const target = join(parent, "planned-project");
   t.after(() => rm(parent, { recursive: true, force: true }));
 
@@ -93,7 +93,7 @@ test("dry-run plans a new project without creating the directory", async (t) => 
 
 test("initializer refuses generated paths that cross a symbolic link", async (t) => {
   const repo = await fixtureRepository();
-  const outside = await mkdtemp(join(tmpdir(), "are-init-outside-"));
+  const outside = await mkdtemp(join(tmpdir(), "aiviron-init-outside-"));
   t.after(() => rm(repo, { recursive: true, force: true }));
   t.after(() => rm(outside, { recursive: true, force: true }));
   await mkdir(join(repo, ".ai"));
@@ -128,32 +128,32 @@ test("generated environment carries a task from Codex to Claude without API stat
   assert.doesNotMatch(resumed.resumePacket, /api[_-]?key|provider credential/i);
 });
 
-test("arenv and compatibility aliases expose the same generator", async (t) => {
-  const parent = await mkdtemp(join(tmpdir(), "are-init-cli-"));
+test("Aiviron CLI exposes initialization and continuity commands", async (t) => {
+  const parent = await mkdtemp(join(tmpdir(), "aiviron-init-cli-"));
   t.after(() => rm(parent, { recursive: true, force: true }));
 
-  const created = await execFileAsync(process.execPath, [join(projectRoot, "bin", "create-agent.mjs"), "created", "--agents", "codex,claude"], {
+  const aiviron = join(projectRoot, "bin", "aiviron.mjs");
+  const created = await execFileAsync(process.execPath, [aiviron, "created", "--agents", "codex,claude"], {
     cwd: parent,
     encoding: "utf8"
   });
   assert.equal(JSON.parse(created.stdout).mode, "subscription-first");
 
-  const planned = await execFileAsync(process.execPath, [join(projectRoot, "bin", "agentctl.mjs"), "init", "planned", "--dry-run"], {
+  const planned = await execFileAsync(process.execPath, [aiviron, "init", "planned", "--dry-run"], {
     cwd: parent,
     encoding: "utf8"
   });
   assert.equal(JSON.parse(planned.stdout).dryRun, true);
 
-  const arenv = join(projectRoot, "bin", "arenv.mjs");
-  const version = await execFileAsync(process.execPath, [arenv, "--version"], { encoding: "utf8" });
+  const version = await execFileAsync(process.execPath, [aiviron, "--version"], { encoding: "utf8" });
   assert.equal(version.stdout.trim(), "0.1.0");
 
-  const primary = await execFileAsync(process.execPath, [arenv, "primary", "--dry-run"], {
+  const primary = await execFileAsync(process.execPath, [aiviron, "primary", "--dry-run"], {
     cwd: parent,
     encoding: "utf8"
   });
   assert.equal(JSON.parse(primary.stdout).dryRun, true);
 
-  const help = await execFileAsync(process.execPath, [arenv, "task", "--help"], { encoding: "utf8" });
-  assert.match(help.stdout, /arenv task handoff/);
+  const help = await execFileAsync(process.execPath, [aiviron, "task", "--help"], { encoding: "utf8" });
+  assert.match(help.stdout, /aiviron task handoff/);
 });

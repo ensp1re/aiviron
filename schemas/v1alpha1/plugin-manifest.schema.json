@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.create-agent.dev/v1alpha1/plugin-manifest.schema.json",
-  "title": "ARE plugin manifest",
+  "$id": "https://schemas.aiviron.dev/v1alpha1/plugin-manifest.schema.json",
+  "title": "Aiviron plugin manifest",
   "type": "object",
   "additionalProperties": false,
   "required": ["apiVersion", "kind", "metadata", "spec"],
   "properties": {
-    "apiVersion": { "const": "dev.create-agent/plugin/v1alpha1" },
+    "apiVersion": { "const": "dev.aiviron/plugin/v1alpha1" },
     "kind": { "const": "Plugin" },
     "metadata": {
       "type": "object",

@@ -14,7 +14,7 @@ export function buildInteractiveInvocation({ agent, repoRoot, taskId, resumePack
   if (agent === "claude" || agent === "claude-code") {
     return {
       executable: "claude",
-      args: ["--name", `Arenv ${taskId}`, resumePacket],
+      args: ["--name", `Aiviron ${taskId}`, resumePacket],
       cwd: repoRoot,
       surface: "interactive-cli"
     };

@@ -1,5 +1,5 @@
 {
-  "apiVersion": "dev.create-agent/plugin/v1alpha1",
+  "apiVersion": "dev.aiviron/plugin/v1alpha1",
   "kind": "Plugin",
   "metadata": {
     "name": "scip-context",

@@ -1,5 +1,5 @@
 {
-  "apiVersion": "dev.create-agent/capsule/v1alpha1",
+  "apiVersion": "dev.aiviron/capsule/v1alpha1",
   "kind": "HandoffCapsule",
   "capsuleId": "cap_01ABCDEFG",
   "createdAt": "2026-07-18T12:00:00Z",

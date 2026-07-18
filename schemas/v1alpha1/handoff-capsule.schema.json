@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.create-agent.dev/v1alpha1/handoff-capsule.schema.json",
-  "title": "ARE portable handoff capsule manifest",
+  "$id": "https://schemas.aiviron.dev/v1alpha1/handoff-capsule.schema.json",
+  "title": "Aiviron portable handoff capsule manifest",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -27,7 +27,7 @@
     "artifacts"
   ],
   "properties": {
-    "apiVersion": { "const": "dev.create-agent/capsule/v1alpha1" },
+    "apiVersion": { "const": "dev.aiviron/capsule/v1alpha1" },
     "kind": { "const": "HandoffCapsule" },
     "capsuleId": { "$ref": "common.schema.json#/$defs/opaqueId" },
     "createdAt": { "type": "string", "format": "date-time" },

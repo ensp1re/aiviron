@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.create-agent.dev/v1alpha1/runtime-event.schema.json",
-  "title": "ARE runtime event",
+  "$id": "https://schemas.aiviron.dev/v1alpha1/runtime-event.schema.json",
+  "title": "Aiviron runtime event",
   "type": "object",
   "additionalProperties": false,
   "required": [

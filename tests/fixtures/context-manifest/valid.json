@@ -1,5 +1,5 @@
 {
-  "apiVersion": "dev.create-agent/v1alpha1",
+  "apiVersion": "dev.aiviron/v1alpha1",
   "kind": "ContextManifest",
   "id": "ctx_01ABCDEFG",
   "taskId": "tsk_01ABCDEFG",
@@ -52,7 +52,7 @@
         "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
         "mediaType": "text/markdown",
         "size": 2200,
-        "uri": "are-object://sha256/4444444444444444444444444444444444444444444444444444444444444444"
+        "uri": "aiviron-object://sha256/4444444444444444444444444444444444444444444444444444444444444444"
       }
     },
     {

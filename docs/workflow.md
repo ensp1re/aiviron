@@ -1,28 +1,28 @@
-# Arenv workflow
+# Aiviron workflow
 
-Arenv creates a shared, repository-owned workspace that AI coding agents can use to understand the project and continue ongoing work.
+Aiviron creates a shared, repository-owned workspace that AI coding agents can use to understand the project and continue ongoing work.
 
 ## End-to-end flow
 
-1. Initialize Arenv in an existing repository or acquire a repository with `arenv work`.
-2. Arenv creates canonical `.ai/` project state and agent instruction files.
+1. Initialize Aiviron in an existing repository or acquire a repository with `aiviron work`.
+2. Aiviron creates canonical `.ai/` project state and agent instruction files.
 3. Start a durable task on an isolated Git branch.
 4. Work with the AI agent or tool you prefer.
 5. Checkpoint completed work, decisions, failures, verification, and next actions.
 6. Resume later or hand the task to another agent using the repository-owned state.
 
 ```bash
-npx arenv .
+npx aiviron .
 
-npx arenv task start \
+npx aiviron task start \
   --objective "Implement the selected change" \
   --agent primary
 
-npx arenv task checkpoint \
+npx aiviron task checkpoint \
   --summary "Implemented the change" \
   --next "Run the focused regression suite"
 
-npx arenv task handoff \
+npx aiviron task handoff \
   --to next-agent \
   --summary "Implementation complete; verification remains"
 ```
@@ -30,7 +30,7 @@ npx arenv task handoff \
 To acquire a repository and start work in one operation:
 
 ```bash
-npx arenv work owner/repository \
+npx aiviron work owner/repository \
   --objective "Implement the selected change" \
   --agent primary
 ```
@@ -43,4 +43,4 @@ npx arenv work owner/repository \
 - `.ai/state/` contains mutable local task state, checkpoints, and resume packets; it is excluded from Git.
 - Agent instruction files project the shared workspace into conventions that coding agents can discover.
 
-Arenv transfers the objective, repository revision and diff, evidence, decisions, failures, and bounded next actions. Private reasoning, chat history, authentication, and prior permissions stay with the original tool.
+Aiviron transfers the objective, repository revision and diff, evidence, decisions, failures, and bounded next actions. Private reasoning, chat history, authentication, and prior permissions stay with the original tool.

@@ -1,5 +1,5 @@
 {
-  "apiVersion": "dev.create-agent/v1alpha1",
+  "apiVersion": "dev.aiviron/v1alpha1",
   "kind": "MemoryRecord",
   "id": "mem_01ABCDEFG",
   "memoryType": "semantic",

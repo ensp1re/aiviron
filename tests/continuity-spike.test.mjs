@@ -33,10 +33,10 @@ async function git(cwd, ...args) {
 }
 
 async function fixtureRepository() {
-  const directory = await mkdtemp(join(tmpdir(), "are-continuity-"));
+  const directory = await mkdtemp(join(tmpdir(), "aiviron-continuity-"));
   await git(directory, "init", "-b", "main");
-  await git(directory, "config", "user.name", "ARE Test");
-  await git(directory, "config", "user.email", "are@example.invalid");
+  await git(directory, "config", "user.name", "Aiviron Test");
+  await git(directory, "config", "user.email", "aiviron@example.invalid");
   await writeFile(join(directory, "app.mjs"), "export const value = 1;\n");
   await git(directory, "add", "app.mjs");
   await git(directory, "commit", "-m", "initial fixture");
@@ -66,12 +66,12 @@ test("task start creates an isolated branch and survives a fresh status read", a
 
   assert.equal(started.task.currentAgent, "codex");
   assert.match(started.task.taskId, /^tsk_[a-f0-9]{32}$/);
-  assert.match(started.task.repository.branch, /^are\/fix-checkout-timeout-/);
+  assert.match(started.task.repository.branch, /^aiviron\/fix-checkout-timeout-/);
   assert.equal(started.task.status, "in_progress");
 
   const reloaded = await taskStatus({ cwd: repo });
   assert.equal(reloaded.task.taskId, started.task.taskId);
-  assert.equal(reloaded.snapshot.dirty, false, "ARE local state must not dirty the user's worktree");
+  assert.equal(reloaded.snapshot.dirty, false, "Aiviron local state must not dirty the user's worktree");
   assert.equal(reloaded.drifted, false);
 });
 
@@ -123,7 +123,7 @@ test("handoff changes the active agent and resume reconstructs operational state
   assert.equal(handedOff.task.previousAgent, "codex");
   assert.equal(handedOff.task.currentAgent, "claude");
   assert.equal(handedOff.capsule.compatibility.sourceAdapter.id, "codex");
-  assert.match(handedOff.resumePacket, /Resume Arenv task/);
+  assert.match(handedOff.resumePacket, /Resume Aiviron task/);
   assert.match(handedOff.resumePacket, /Current agent: claude/);
   assert.match(handedOff.resumePacket, /Add regression test/);
   assert.match(handedOff.resumePacket, /First test command used the wrong package path/);
@@ -161,7 +161,7 @@ test("GitHub repository forms are detected without treating arbitrary paths as G
 
 test("work clones a repository and starts its durable task in one operation", async (t) => {
   const source = await fixtureRepository();
-  const parent = await mkdtemp(join(tmpdir(), "are-work-parent-"));
+  const parent = await mkdtemp(join(tmpdir(), "aiviron-work-parent-"));
   t.after(() => rm(source, { recursive: true, force: true }));
   t.after(() => rm(parent, { recursive: true, force: true }));
 
@@ -178,7 +178,7 @@ test("work clones a repository and starts its durable task in one operation", as
   assert.equal(result.environment.mode, "subscription-first");
   assert.deepEqual(result.environment.agents, ["codex", "claude"]);
   assert.equal(result.task.currentAgent, "codex");
-  assert.match(result.task.repository.branch, /^are\/fix-checkout-timeout-/);
+  assert.match(result.task.repository.branch, /^aiviron\/fix-checkout-timeout-/);
   assert.match(await readFile(join(result.acquisition.destination, "AGENTS.md"), "utf8"), /subscription authentication/);
   assert.match(await readFile(join(result.acquisition.destination, "CLAUDE.md"), "utf8"), /task resume --agent claude/);
 
@@ -189,7 +189,7 @@ test("work clones a repository and starts its durable task in one operation", as
 
 test("repository acquisition refuses an existing destination", async (t) => {
   const source = await fixtureRepository();
-  const parent = await mkdtemp(join(tmpdir(), "are-existing-parent-"));
+  const parent = await mkdtemp(join(tmpdir(), "aiviron-existing-parent-"));
   t.after(() => rm(source, { recursive: true, force: true }));
   t.after(() => rm(parent, { recursive: true, force: true }));
   await assert.rejects(
@@ -229,10 +229,10 @@ test("interactive launch adapters inject the resume packet without bypassing per
   assert.deepEqual(local.args.slice(0, 4), ["--oss", "--local-provider", "ollama", "--cd"]);
 });
 
-test("the agentctl command parses start, handoff, and machine-readable resume", async (t) => {
+test("the Aiviron command parses start, handoff, and machine-readable resume", async (t) => {
   const repo = await fixtureRepository();
   t.after(() => rm(repo, { recursive: true, force: true }));
-  const cli = join(root, "bin", "agentctl.mjs");
+  const cli = join(root, "bin", "aiviron.mjs");
 
   const started = await execFileAsync(process.execPath, [
     cli,

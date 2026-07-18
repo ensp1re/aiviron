@@ -48,25 +48,25 @@ function progressOptions(options) {
   };
 }
 
-function usage() {
-  return `Arenv continuity commands
+function continuityUsage() {
+  return `Aiviron continuity commands
 
 Usage:
-  arenv init [directory] [--agents codex,claude] [--name <name>] [--dry-run]
-  arenv work <repository> --objective <text> --agent <id> [--directory <path>] [--fork auto|always|never]
-  arenv task start --objective <text> --agent <id> [--branch <name>] [--no-branch]
-  arenv task status [--json]
-  arenv task checkpoint [--summary <text>] [--completed <text>] [--next <text>]
-  arenv task handoff --to <agent> [--summary <text>] [--next <text>]
-  arenv task resume [--agent <id>] [--json]
-  arenv task launch --agent codex|claude|codex-oss [--local-provider ollama|lmstudio] [--dry-run]
+  aiviron init [directory] [--agents codex,claude] [--name <name>] [--dry-run]
+  aiviron work <repository> --objective <text> --agent <id> [--directory <path>] [--fork auto|always|never]
+  aiviron task start --objective <text> --agent <id> [--branch <name>] [--no-branch]
+  aiviron task status [--json]
+  aiviron task checkpoint [--summary <text>] [--completed <text>] [--next <text>]
+  aiviron task handoff --to <agent> [--summary <text>] [--next <text>]
+  aiviron task resume [--agent <id>] [--json]
+  aiviron task launch --agent codex|claude|codex-oss [--local-provider ollama|lmstudio] [--dry-run]
 `;
 }
 
 async function main() {
   const { command, options } = parse(process.argv.slice(2));
   if (options.help) {
-    process.stdout.write(usage());
+    process.stdout.write(continuityUsage());
     return;
   }
   if (command === "init") {
@@ -92,7 +92,7 @@ async function main() {
     process.stdout.write(`${JSON.stringify({ acquisition: result.acquisition, environment: result.environment, task: result.task }, null, 2)}\n`);
     return;
   }
-  if (command !== "task") throw new Error(usage());
+  if (command !== "task") throw new Error(continuityUsage());
   const subcommand = options._.shift();
   if (subcommand === "start") {
     const result = await startTask({
@@ -136,7 +136,7 @@ async function main() {
     if (options["dry-run"]) process.stdout.write(`${JSON.stringify(result.invocation, null, 2)}\n`);
     return;
   }
-  throw new Error(usage());
+  throw new Error(continuityUsage());
 }
 
 main().catch((error) => {

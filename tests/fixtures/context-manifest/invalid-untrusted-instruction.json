@@ -1,5 +1,5 @@
 {
-  "apiVersion": "dev.create-agent/v1alpha1",
+  "apiVersion": "dev.aiviron/v1alpha1",
   "kind": "ContextManifest",
   "id": "ctx_01ABCDEFG",
   "taskId": "tsk_01ABCDEFG",
