@@ -32,9 +32,9 @@
     "docs/continuity-spike.md"
   ],
   "bin": {
-    "arenv": "./bin/arenv.mjs",
-    "agentctl": "./bin/agentctl.mjs",
-    "create-agent": "./bin/create-agent.mjs"
+    "arenv": "bin/arenv.mjs",
+    "agentctl": "bin/agentctl.mjs",
+    "create-agent": "bin/create-agent.mjs"
   },
   "publishConfig": {
     "access": "public"
