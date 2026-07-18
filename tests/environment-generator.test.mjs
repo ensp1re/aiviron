@@ -58,8 +58,16 @@ test("Aiviron initializes a new subscription-first Git project", async (t) => {
   assert.match(agents, /task resume --agent codex/);
   assert.match(claude, /task resume --agent claude/);
   assert.equal(await readFile(join(target, ".ai", ".gitignore"), "utf8"), "state/\n");
-  const repeated = await initializeEnvironment({ cwd: target, agents: ["codex", "claude"] });
+  const profilePath = join(target, ".ai", "repository", "profile.json");
+  const initialProfile = await readFile(profilePath, "utf8");
+  const repeated = await initializeEnvironment({
+    cwd: target,
+    agents: ["codex", "claude"],
+    clock: () => new Date("2026-07-18T19:45:00.000Z")
+  });
   assert.equal(repeated.projectId, result.projectId);
+  assert.equal(await readFile(profilePath, "utf8"), initialProfile);
+  assert.ok(repeated.files.every((file) => file.action === "unchanged"));
 });
 
 test("initializer preserves human instructions and remains rerunnable", async (t) => {
@@ -146,7 +154,7 @@ test("Aiviron CLI exposes initialization and continuity commands", async (t) => 
   assert.equal(JSON.parse(planned.stdout).dryRun, true);
 
   const version = await execFileAsync(process.execPath, [aiviron, "--version"], { encoding: "utf8" });
-  assert.equal(version.stdout.trim(), "0.1.0");
+  assert.equal(version.stdout.trim(), "0.1.1");
 
   const primary = await execFileAsync(process.execPath, [aiviron, "primary", "--dry-run"], {
     cwd: parent,

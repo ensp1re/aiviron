@@ -14,7 +14,7 @@ import { opaqueId, sha256, slugify, stableOpaqueId } from "./identity.mjs";
 import { putObject, readCurrentTask, statePaths, writeJsonAtomic, writeTextAtomic } from "./store.mjs";
 
 const schemaVersion = "aiviron-task-state/v1alpha1";
-const runtimeVersion = "0.1.0";
+const runtimeVersion = "0.1.1";
 
 function now(clock) {
   return clock().toISOString();

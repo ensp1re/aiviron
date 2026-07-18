@@ -7,7 +7,8 @@ import { promisify } from "node:util";
 import { stableOpaqueId } from "../continuity/identity.mjs";
 
 const execFileAsync = promisify(execFile);
-const generatorVersion = "0.1.0";
+const generatorVersion = "0.1.1";
+const repositoryProfileSchema = "aiviron-repository-profile/v1alpha1";
 const managedStart = "<!-- aiviron:managed:start -->";
 const managedEnd = "<!-- aiviron:managed:end -->";
 const supportedAgents = new Set(["codex", "claude", "gemini"]);
@@ -145,6 +146,22 @@ async function readOrNull(path) {
   }
 }
 
+async function readJsonOrNull(path) {
+  const content = await readOrNull(path);
+  if (content === null) return null;
+  try {
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+
+function reusableGeneratedAt(profile, projectId) {
+  if (profile?.schemaVersion !== repositoryProfileSchema || profile.projectId !== projectId) return null;
+  if (typeof profile.generatedAt !== "string" || !Number.isFinite(Date.parse(profile.generatedAt))) return null;
+  return profile.generatedAt;
+}
+
 function digest(value) {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
@@ -208,10 +225,14 @@ export async function initializeEnvironment({
   const projectName = name?.trim() || basename(repoRoot);
   const repository = await detectRepository(repoRoot);
   const projectId = stableOpaqueId("prj", repository.remote || repoRoot);
+  const initializedAt = clock().toISOString();
+  const profilePath = join(repoRoot, ".ai", "repository", "profile.json");
+  await assertSafeWritePath(repoRoot, profilePath);
+  const existingProfile = await readJsonOrNull(profilePath);
   const profile = {
-    schemaVersion: "aiviron-repository-profile/v1alpha1",
+    schemaVersion: repositoryProfileSchema,
     generatedBy: `aiviron/${generatorVersion}`,
-    generatedAt: clock().toISOString(),
+    generatedAt: reusableGeneratedAt(existingProfile, projectId) || initializedAt,
     projectId,
     name: projectName,
     ...repository,
@@ -228,7 +249,7 @@ export async function initializeEnvironment({
   const candidates = [
     await planFile(repoRoot, join(repoRoot, ".ai", "config.yaml"), renderConfig({ projectId, projectName, agents: selectedAgents }), { preserveExisting: true }),
     await planFile(repoRoot, environmentReadmePath, upsertManagedBlock(existingEnvironmentReadme, renderEnvironmentReadme({ projectName, agents: selectedAgents }))),
-    await planFile(repoRoot, join(repoRoot, ".ai", "repository", "profile.json"), `${JSON.stringify(profile, null, 2)}\n`),
+    await planFile(repoRoot, profilePath, `${JSON.stringify(profile, null, 2)}\n`),
     await planFile(repoRoot, join(repoRoot, ".ai", "context", "policies.yaml"), renderContextPolicy(), { preserveExisting: true }),
     await planFile(repoRoot, join(repoRoot, ".ai", "sessions", "policy.yaml"), renderSessionPolicy(), { preserveExisting: true }),
     await planFile(repoRoot, environmentGitignorePath, ensureGitignoreState(existingEnvironmentGitignore))
@@ -268,7 +289,7 @@ export async function initializeEnvironment({
 
   return {
     schemaVersion: "aiviron-init-result/v1alpha1",
-    generatedAt: clock().toISOString(),
+    generatedAt: initializedAt,
     dryRun,
     repoRoot,
     gitInitialized: root.gitInitialized,
