@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.create-agent.dev/v1alpha1/context-manifest.schema.json",
+  "title": "ARE compiled context manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "id",
+    "taskId",
+    "createdAt",
+    "requestDigest",
+    "repository",
+    "compiler",
+    "consumer",
+    "purpose",
+    "budget",
+    "items",
+    "sections",
+    "renderings"
+  ],
+  "properties": {
+    "apiVersion": { "const": "dev.create-agent/v1alpha1" },
+    "kind": { "const": "ContextManifest" },
+    "id": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "taskId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "requestDigest": { "$ref": "common.schema.json#/$defs/digest" },
+    "repository": { "$ref": "common.schema.json#/$defs/repositoryState" },
+    "compiler": { "$ref": "common.schema.json#/$defs/versionedComponent" },
+    "consumer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter"],
+      "properties": {
+        "adapter": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "contextWindow": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "purpose": {
+      "type": "string",
+      "enum": ["plan", "implement", "review", "debug", "handoff", "evaluate"]
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxTokens", "reserveOutput", "reserveTools", "usedTokens"],
+      "properties": {
+        "maxTokens": { "type": "integer", "minimum": 1 },
+        "reserveOutput": { "type": "integer", "minimum": 0 },
+        "reserveTools": { "type": "integer", "minimum": 0 },
+        "usedTokens": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/contextItem" }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "order", "mandatory", "itemIds", "tokenEstimate"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "order": { "type": "integer", "minimum": 0 },
+          "mandatory": { "type": "boolean" },
+          "itemIds": {
+            "type": "array",
+            "items": { "$ref": "common.schema.json#/$defs/opaqueId" },
+            "uniqueItems": true
+          },
+          "tokenEstimate": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "renderings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["adapter", "content", "tokenCount"],
+        "properties": {
+          "adapter": { "type": "string", "minLength": 1 },
+          "model": { "type": "string", "minLength": 1 },
+          "content": { "$ref": "common.schema.json#/$defs/objectRef" },
+          "tokenCount": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "contextItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "kind",
+        "trust",
+        "sensitivity",
+        "instruction",
+        "provenance",
+        "score",
+        "tokenEstimate",
+        "status",
+        "reasons"
+      ],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/opaqueId" },
+        "source": { "type": "string", "format": "uri-reference" },
+        "kind": { "type": "string", "minLength": 1 },
+        "trust": { "$ref": "common.schema.json#/$defs/trust" },
+        "sensitivity": { "$ref": "common.schema.json#/$defs/sensitivity" },
+        "instruction": { "type": "boolean" },
+        "provenance": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "common.schema.json#/$defs/evidenceRef" }
+        },
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "tokenEstimate": { "type": "integer", "minimum": 0 },
+        "status": {
+          "type": "string",
+          "enum": ["included", "omitted", "rejected", "transformed"]
+        },
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "transformationLevel": {
+          "type": "string",
+          "enum": ["L0", "L1", "L2", "L3", "L4"]
+        },
+        "content": { "$ref": "common.schema.json#/$defs/objectRef" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "instruction": { "const": true } },
+            "required": ["instruction"]
+          },
+          "then": {
+            "properties": { "trust": { "const": "trusted" } }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": { "enum": ["included", "transformed"] }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": { "content": { "$ref": "common.schema.json#/$defs/objectRef" } },
+            "required": ["content"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "transformed" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "transformationLevel": {
+                "type": "string",
+                "enum": ["L0", "L1", "L2", "L3", "L4"]
+              }
+            },
+            "required": ["transformationLevel"]
+          }
+        }
+      ]
+    }
+  }
+}

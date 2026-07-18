@@ -1,0 +1,16 @@
+{
+  "apiVersion": "dev.create-agent/v1alpha1",
+  "kind": "MemoryRecord",
+  "id": "mem_01ABCDEFG",
+  "memoryType": "semantic",
+  "scope": { "project": "prj_01ABCDEFG" },
+  "payload": { "fact": "Production deploys are manual." },
+  "status": "accepted",
+  "provenance": [{ "uri": "repo:///docs/deploy.md", "digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777" }],
+  "confidence": 0.8,
+  "validTime": {},
+  "transactionTime": { "recordedAt": "2026-07-18T12:00:00Z" },
+  "sensitivity": "internal",
+  "trust": "trusted",
+  "retention": { "legalHold": false }
+}

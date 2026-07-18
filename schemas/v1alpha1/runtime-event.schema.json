@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.create-agent.dev/v1alpha1/runtime-event.schema.json",
+  "title": "ARE runtime event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "subject",
+    "time",
+    "dataschema",
+    "datacontenttype",
+    "sequence",
+    "correlationid",
+    "actor",
+    "repository",
+    "data"
+  ],
+  "properties": {
+    "specversion": { "const": "1.0" },
+    "id": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "source": { "type": "string", "format": "uri" },
+    "type": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+\\.v[1-9][0-9]*$"
+    },
+    "subject": { "type": "string", "minLength": 1 },
+    "time": { "type": "string", "format": "date-time" },
+    "dataschema": { "type": "string", "format": "uri" },
+    "datacontenttype": { "const": "application/json" },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "correlationid": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "causationid": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "actor": { "$ref": "common.schema.json#/$defs/actor" },
+    "repository": { "$ref": "common.schema.json#/$defs/repositoryState" },
+    "policyDecisionId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "traceparent": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$"
+    },
+    "data": true
+  }
+}

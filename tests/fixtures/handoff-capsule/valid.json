@@ -1,0 +1,54 @@
+{
+  "apiVersion": "dev.create-agent/capsule/v1alpha1",
+  "kind": "HandoffCapsule",
+  "capsuleId": "cap_01ABCDEFG",
+  "createdAt": "2026-07-18T12:00:00Z",
+  "projectId": "prj_01ABCDEFG",
+  "taskId": "tsk_01ABCDEFG",
+  "sourceSessionId": "ses_01ABCDEFG",
+  "sourceCheckpointId": "chk_01ABCDEFG",
+  "repository": {
+    "projectId": "prj_01ABCDEFG",
+    "head": "git:abcdef0123456789",
+    "dirty": true,
+    "dirtyDigest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "branch": "codex/stripe-webhook",
+    "worktree": "/workspace/project"
+  },
+  "compatibility": {
+    "minimumRuntime": "0.1.0",
+    "schemas": {
+      "capsule": "v1alpha1",
+      "contextManifest": "v1alpha1",
+      "action": "v1alpha1"
+    },
+    "sourceAdapter": {
+      "id": "codex",
+      "version": "0.1.0",
+      "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    }
+  },
+  "objective": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000001", "mediaType": "text/markdown", "size": 500 },
+  "state": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000002", "mediaType": "application/json", "size": 900 },
+  "changes": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000003", "mediaType": "text/x-diff", "size": 3000 },
+  "evidence": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000004", "mediaType": "application/json", "size": 1200 },
+  "decisions": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000005", "mediaType": "application/json", "size": 400 },
+  "failures": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000006", "mediaType": "application/json", "size": 300 },
+  "contextManifest": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000007", "mediaType": "application/json", "size": 2000 },
+  "nextActions": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000008", "mediaType": "application/json", "size": 600 },
+  "permissions": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000009", "mediaType": "application/json", "size": 300 },
+  "environment": { "digest": "sha256:000000000000000000000000000000000000000000000000000000000000000a", "mediaType": "application/json", "size": 700 },
+  "artifacts": [
+    { "name": "objective", "ref": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000001", "mediaType": "text/markdown", "size": 500 } },
+    { "name": "state", "ref": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000002", "mediaType": "application/json", "size": 900 } },
+    { "name": "changes", "ref": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000003", "mediaType": "text/x-diff", "size": 3000 } },
+    { "name": "evidence", "ref": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000004", "mediaType": "application/json", "size": 1200 } },
+    { "name": "decisions", "ref": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000005", "mediaType": "application/json", "size": 400 } },
+    { "name": "failures", "ref": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000006", "mediaType": "application/json", "size": 300 } },
+    { "name": "context-manifest", "ref": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000007", "mediaType": "application/json", "size": 2000 } },
+    { "name": "next-actions", "ref": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000008", "mediaType": "application/json", "size": 600 } },
+    { "name": "permissions", "ref": { "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000009", "mediaType": "application/json", "size": 300 } },
+    { "name": "environment", "ref": { "digest": "sha256:000000000000000000000000000000000000000000000000000000000000000a", "mediaType": "application/json", "size": 700 } }
+  ],
+  "warnings": ["Prior permissions are audit-only and must be reauthorized by the destination runtime."]
+}

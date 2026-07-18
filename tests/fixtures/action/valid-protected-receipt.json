@@ -1,0 +1,28 @@
+{
+  "apiVersion": "dev.create-agent/v1alpha1",
+  "kind": "ActionReceipt",
+  "id": "receipt_01ABCDEFG",
+  "requestId": "action_01ABCDEFG",
+  "previewId": "preview_01ABCDEFG",
+  "status": "succeeded",
+  "risk": "R3",
+  "argumentsDigest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+  "startedAt": "2026-07-18T12:00:00Z",
+  "finishedAt": "2026-07-18T12:00:02Z",
+  "providerRequestId": "provider-request-42",
+  "beforeVersion": "etag:1",
+  "afterVersion": "etag:2",
+  "output": {
+    "digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+    "mediaType": "application/json",
+    "size": 240
+  },
+  "policyDecisionId": "poldec_01ABCDEFG",
+  "grantId": "grant_01ABCDEFG",
+  "repository": {
+    "projectId": "prj_01ABCDEFG",
+    "head": "git:abcdef0123456789",
+    "dirty": false,
+    "branch": "main"
+  }
+}

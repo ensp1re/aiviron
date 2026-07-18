@@ -1,0 +1,18 @@
+{
+  "specversion": "1.0",
+  "id": "evt_01ABCDEFG",
+  "source": "are://project/prj_01ABCDEFG/runtime/local",
+  "type": "dev.are.action.completed.v1",
+  "subject": "task/tsk_01ABCDEFG",
+  "time": "2026-07-18T12:00:00Z",
+  "dataschema": "https://schemas.create-agent.dev/events/action-completed-v1.json",
+  "datacontenttype": "application/json",
+  "sequence": 1,
+  "correlationid": "tsk_01ABCDEFG",
+  "repository": {
+    "projectId": "prj_01ABCDEFG",
+    "head": "git:abcdef0",
+    "dirty": false
+  },
+  "data": {}
+}

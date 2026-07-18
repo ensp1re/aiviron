@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.create-agent.dev/v1alpha1/plugin-manifest.schema.json",
+  "title": "ARE plugin manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "dev.create-agent/plugin/v1alpha1" },
+    "kind": { "const": "Plugin" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "publisher", "license"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "publisher": { "type": "string", "minLength": 1 },
+        "license": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "homepage": { "type": "string", "format": "uri" }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "runtime", "compatibility", "capabilities", "contributions", "artifacts", "provenance"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["content-pack", "analyzer", "context-provider", "memory-provider", "executor", "adapter", "evaluator", "telemetry-exporter", "policy-provider"]
+        },
+        "runtime": {
+          "type": "string",
+          "enum": ["content", "wasm-wasi-preview2", "process", "mcp"]
+        },
+        "entrypoint": {
+          "type": "string",
+          "minLength": 1,
+          "not": { "pattern": "(^/|(^|/)\\.\\.(/|$))" }
+        },
+        "compatibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["runtime", "schemas"],
+          "properties": {
+            "runtime": { "type": "string", "minLength": 1 },
+            "schemas": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "optional"],
+          "properties": {
+            "required": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "optional": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "configurationSchema": { "$ref": "common.schema.json#/$defs/objectRef" },
+        "contributions": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "uniqueItems": true
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "digest", "mediaType", "size"],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "not": { "pattern": "(^/|(^|/)\\.\\.(/|$))" }
+              },
+              "digest": { "$ref": "common.schema.json#/$defs/digest" },
+              "mediaType": { "type": "string", "minLength": 1 },
+              "size": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sbom", "signature"],
+          "properties": {
+            "sbom": { "$ref": "common.schema.json#/$defs/objectRef" },
+            "signature": { "$ref": "common.schema.json#/$defs/objectRef" },
+            "source": { "type": "string", "format": "uri" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "runtime": { "const": "content" } }, "required": ["runtime"] },
+          "then": { "properties": { "entrypoint": false } },
+          "else": {
+            "properties": {
+              "entrypoint": {
+                "type": "string",
+                "minLength": 1,
+                "not": { "pattern": "(^/|(^|/)\\.\\.(/|$))" }
+              }
+            },
+            "required": ["entrypoint"]
+          }
+        }
+      ]
+    }
+  }
+}

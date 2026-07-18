@@ -1,0 +1,57 @@
+{
+  "name": "arenv",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Subscription-first project environments and continuity for AI coding agents",
+  "keywords": [
+    "ai",
+    "agents",
+    "coding-agents",
+    "codex",
+    "claude-code",
+    "gemini",
+    "cli",
+    "handoff",
+    "local-first"
+  ],
+  "license": "MIT",
+  "author": "0xhumb",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ensp1re/arenv.git"
+  },
+  "homepage": "https://github.com/ensp1re/arenv#readme",
+  "bugs": {
+    "url": "https://github.com/ensp1re/arenv/issues"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "schemas/",
+    "docs/subscription-first-workflow.md",
+    "docs/continuity-spike.md"
+  ],
+  "bin": {
+    "arenv": "./bin/arenv.mjs",
+    "agentctl": "./bin/agentctl.mjs",
+    "create-agent": "./bin/create-agent.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node --test tests/environment-generator.test.mjs tests/continuity-spike.test.mjs tests/schema-conformance.test.mjs",
+    "prepublishOnly": "npm test",
+    "test:schemas": "node --test tests/schema-conformance.test.mjs",
+    "arenv": "node bin/arenv.mjs",
+    "create-agent": "node bin/create-agent.mjs",
+    "agentctl": "node bin/agentctl.mjs"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

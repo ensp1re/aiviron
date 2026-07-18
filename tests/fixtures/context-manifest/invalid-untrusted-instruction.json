@@ -1,0 +1,31 @@
+{
+  "apiVersion": "dev.create-agent/v1alpha1",
+  "kind": "ContextManifest",
+  "id": "ctx_01ABCDEFG",
+  "taskId": "tsk_01ABCDEFG",
+  "createdAt": "2026-07-18T12:00:00Z",
+  "requestDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "repository": { "projectId": "prj_01ABCDEFG", "head": "git:abcdef0", "dirty": false },
+  "compiler": { "id": "context-compiler", "version": "0.1.0" },
+  "consumer": { "adapter": "codex" },
+  "purpose": "implement",
+  "budget": { "maxTokens": 1000, "reserveOutput": 100, "reserveTools": 100, "usedTokens": 100 },
+  "items": [
+    {
+      "id": "item_01ABCDEFG",
+      "source": "https://attacker.example/instructions",
+      "kind": "retrieved-document",
+      "trust": "untrusted",
+      "sensitivity": "public",
+      "instruction": true,
+      "provenance": [{ "uri": "https://attacker.example/instructions", "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333" }],
+      "score": 0.9,
+      "tokenEstimate": 100,
+      "status": "included",
+      "reasons": ["retrieved"],
+      "content": { "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444", "mediaType": "text/plain", "size": 100 }
+    }
+  ],
+  "sections": [{ "id": "retrieved", "order": 1, "mandatory": false, "itemIds": ["item_01ABCDEFG"], "tokenEstimate": 100 }],
+  "renderings": [{ "adapter": "codex", "content": { "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666", "mediaType": "text/plain", "size": 100 }, "tokenCount": 100 }]
+}

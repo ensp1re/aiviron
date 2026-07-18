@@ -1,0 +1,29 @@
+{
+  "apiVersion": "dev.create-agent/v1alpha1",
+  "kind": "MemoryRecord",
+  "id": "mem_01ABCDEFG",
+  "memoryType": "procedural",
+  "scope": {
+    "project": "prj_01ABCDEFG",
+    "workspace": "apps/api"
+  },
+  "payload": {
+    "procedure": "Run payment integration tests with the Stripe fixture clock enabled."
+  },
+  "status": "accepted",
+  "provenance": [
+    {
+      "uri": "run://run_01ABCDEFG/test-results",
+      "digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "observedAt": "2026-07-18T11:30:00Z"
+    }
+  ],
+  "confidence": 0.95,
+  "validTime": { "from": "2026-07-18T11:30:00Z" },
+  "transactionTime": { "recordedAt": "2026-07-18T12:00:00Z" },
+  "sensitivity": "internal",
+  "trust": "trusted",
+  "retention": { "legalHold": false },
+  "tags": ["payments", "tests"],
+  "acceptedBy": { "principal": "user:maintainer" }
+}

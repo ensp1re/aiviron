@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.create-agent.dev/v1alpha1/action.schema.json",
+  "title": "ARE action request, preview, or receipt",
+  "oneOf": [
+    { "$ref": "#/$defs/request" },
+    { "$ref": "#/$defs/preview" },
+    { "$ref": "#/$defs/receipt" }
+  ],
+  "$defs": {
+    "risk": {
+      "type": "string",
+      "enum": ["R0", "R1", "R2", "R3", "R4"]
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "kind",
+        "id",
+        "taskId",
+        "actionType",
+        "capability",
+        "target",
+        "arguments",
+        "argumentsDigest",
+        "risk",
+        "idempotencyKey",
+        "requestedAt",
+        "requestedBy",
+        "repository"
+      ],
+      "properties": {
+        "apiVersion": { "const": "dev.create-agent/v1alpha1" },
+        "kind": { "const": "ActionRequest" },
+        "id": { "$ref": "common.schema.json#/$defs/opaqueId" },
+        "taskId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+        "actionType": { "type": "string", "minLength": 1 },
+        "capability": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+        },
+        "target": { "type": "string", "minLength": 1 },
+        "arguments": { "type": "object" },
+        "argumentsDigest": { "$ref": "common.schema.json#/$defs/digest" },
+        "risk": { "$ref": "#/$defs/risk" },
+        "idempotencyKey": { "type": "string", "minLength": 8, "maxLength": 255 },
+        "requestedAt": { "type": "string", "format": "date-time" },
+        "requestedBy": { "$ref": "common.schema.json#/$defs/actor" },
+        "repository": { "$ref": "common.schema.json#/$defs/repositoryState" }
+      }
+    },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "kind",
+        "id",
+        "requestId",
+        "risk",
+        "requiredCapabilities",
+        "reversible",
+        "argumentsDigest",
+        "preview",
+        "preparedAt",
+        "expiresAt",
+        "repository"
+      ],
+      "properties": {
+        "apiVersion": { "const": "dev.create-agent/v1alpha1" },
+        "kind": { "const": "ActionPreview" },
+        "id": { "$ref": "common.schema.json#/$defs/opaqueId" },
+        "requestId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+        "risk": { "$ref": "#/$defs/risk" },
+        "requiredCapabilities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "reversible": { "type": "boolean" },
+        "argumentsDigest": { "$ref": "common.schema.json#/$defs/digest" },
+        "preview": { "$ref": "common.schema.json#/$defs/objectRef" },
+        "targetVersion": { "type": "string", "minLength": 1 },
+        "preparedAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "repository": { "$ref": "common.schema.json#/$defs/repositoryState" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "risk": { "enum": ["R3", "R4"] } }, "required": ["risk"] },
+          "then": {
+            "properties": { "targetVersion": { "type": "string", "minLength": 1 } },
+            "required": ["targetVersion"]
+          }
+        }
+      ]
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "kind",
+        "id",
+        "requestId",
+        "status",
+        "risk",
+        "argumentsDigest",
+        "startedAt",
+        "finishedAt",
+        "policyDecisionId",
+        "repository"
+      ],
+      "properties": {
+        "apiVersion": { "const": "dev.create-agent/v1alpha1" },
+        "kind": { "const": "ActionReceipt" },
+        "id": { "$ref": "common.schema.json#/$defs/opaqueId" },
+        "requestId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+        "previewId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+        "status": {
+          "type": "string",
+          "enum": ["succeeded", "failed", "unknown", "compensated"]
+        },
+        "risk": { "$ref": "#/$defs/risk" },
+        "argumentsDigest": { "$ref": "common.schema.json#/$defs/digest" },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "finishedAt": { "type": "string", "format": "date-time" },
+        "providerRequestId": { "type": "string", "minLength": 1 },
+        "beforeVersion": { "type": "string", "minLength": 1 },
+        "afterVersion": { "type": "string", "minLength": 1 },
+        "output": { "$ref": "common.schema.json#/$defs/objectRef" },
+        "policyDecisionId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+        "grantId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+        "repository": { "$ref": "common.schema.json#/$defs/repositoryState" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "risk": { "enum": ["R3", "R4"] } }, "required": ["risk"] },
+          "then": {
+            "properties": {
+              "previewId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+              "grantId": { "$ref": "common.schema.json#/$defs/opaqueId" }
+            },
+            "required": ["previewId", "grantId"]
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "succeeded" } }, "required": ["status"] },
+          "then": {
+            "properties": { "output": { "$ref": "common.schema.json#/$defs/objectRef" } },
+            "required": ["output"]
+          }
+        }
+      ]
+    }
+  }
+}

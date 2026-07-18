@@ -1,0 +1,49 @@
+{
+  "apiVersion": "dev.create-agent/plugin/v1alpha1",
+  "kind": "Plugin",
+  "metadata": {
+    "name": "scip-context",
+    "version": "1.3.0",
+    "publisher": "example.org",
+    "license": "Apache-2.0",
+    "description": "Imports SCIP indexes as repository context.",
+    "homepage": "https://example.org/scip-context"
+  },
+  "spec": {
+    "type": "context-provider",
+    "runtime": "wasm-wasi-preview2",
+    "entrypoint": "plugin.wasm",
+    "compatibility": {
+      "runtime": ">=0.3 <0.5",
+      "schemas": { "contextItem": "v1alpha1" }
+    },
+    "capabilities": {
+      "required": ["repo.read:**"],
+      "optional": []
+    },
+    "contributions": {
+      "contextProviders": ["scip"]
+    },
+    "artifacts": [
+      {
+        "path": "plugin.wasm",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "mediaType": "application/wasm",
+        "size": 1024
+      }
+    ],
+    "provenance": {
+      "sbom": {
+        "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "mediaType": "application/spdx+json",
+        "size": 800
+      },
+      "signature": {
+        "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "mediaType": "application/vnd.dev.sigstore.bundle+json",
+        "size": 400
+      },
+      "source": "https://github.com/example/scip-context"
+    }
+  }
+}

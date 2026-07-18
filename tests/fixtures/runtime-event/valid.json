@@ -1,0 +1,32 @@
+{
+  "specversion": "1.0",
+  "id": "evt_01ABCDEFG",
+  "source": "are://project/prj_01ABCDEFG/runtime/local",
+  "type": "dev.are.action.completed.v1",
+  "subject": "task/tsk_01ABCDEFG/session/ses_01ABCDEFG",
+  "time": "2026-07-18T12:00:00Z",
+  "dataschema": "https://schemas.create-agent.dev/events/action-completed-v1.json",
+  "datacontenttype": "application/json",
+  "sequence": 184,
+  "correlationid": "tsk_01ABCDEFG",
+  "causationid": "evt_00ABCDEFG",
+  "actor": {
+    "principal": "agent:codex",
+    "instance": "codex-local-1",
+    "adapter": "codex"
+  },
+  "repository": {
+    "projectId": "prj_01ABCDEFG",
+    "head": "git:abcdef0123456789",
+    "dirty": true,
+    "dirtyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "branch": "codex/stripe-webhook",
+    "worktree": "/workspace/project"
+  },
+  "policyDecisionId": "poldec_01ABCDEFG",
+  "traceparent": "00-00000000000000000000000000000001-0000000000000001-01",
+  "data": {
+    "actionId": "act_01ABCDEFG",
+    "status": "succeeded"
+  }
+}

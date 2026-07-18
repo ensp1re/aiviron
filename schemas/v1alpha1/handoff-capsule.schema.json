@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.create-agent.dev/v1alpha1/handoff-capsule.schema.json",
+  "title": "ARE portable handoff capsule manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "capsuleId",
+    "createdAt",
+    "projectId",
+    "taskId",
+    "sourceSessionId",
+    "sourceCheckpointId",
+    "repository",
+    "compatibility",
+    "objective",
+    "state",
+    "evidence",
+    "decisions",
+    "failures",
+    "contextManifest",
+    "nextActions",
+    "permissions",
+    "environment",
+    "artifacts"
+  ],
+  "properties": {
+    "apiVersion": { "const": "dev.create-agent/capsule/v1alpha1" },
+    "kind": { "const": "HandoffCapsule" },
+    "capsuleId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "projectId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "taskId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "sourceSessionId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "sourceCheckpointId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "parentCapsules": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/opaqueId" },
+      "uniqueItems": true
+    },
+    "repository": { "$ref": "common.schema.json#/$defs/repositoryState" },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimumRuntime", "schemas", "sourceAdapter"],
+      "properties": {
+        "minimumRuntime": { "type": "string", "minLength": 1 },
+        "schemas": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "sourceAdapter": { "$ref": "common.schema.json#/$defs/versionedComponent" }
+      }
+    },
+    "objective": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "state": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "changes": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "evidence": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "decisions": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "failures": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "contextManifest": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "nextActions": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "permissions": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "environment": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "signature": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "artifacts": {
+      "type": "array",
+      "minItems": 9,
+      "items": { "$ref": "#/$defs/namedArtifact" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "namedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "ref"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": ["objective", "state", "changes", "evidence", "decisions", "failures", "context-manifest", "next-actions", "permissions", "environment", "signature", "other"]
+        },
+        "ref": { "$ref": "common.schema.json#/$defs/objectRef" }
+      }
+    }
+  }
+}

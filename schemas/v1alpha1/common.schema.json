@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.create-agent.dev/v1alpha1/common.schema.json",
+  "title": "ARE common contract definitions",
+  "$defs": {
+    "opaqueId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*_[A-Za-z0-9_-]{8,}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "gitRevision": {
+      "type": "string",
+      "pattern": "^git:[a-f0-9]{7,64}$"
+    },
+    "trust": {
+      "type": "string",
+      "enum": ["trusted", "mixed", "untrusted"]
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["public", "internal", "confidential", "restricted"]
+    },
+    "objectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["digest", "mediaType", "size"],
+      "properties": {
+        "digest": { "$ref": "#/$defs/digest" },
+        "mediaType": { "type": "string", "minLength": 1 },
+        "size": { "type": "integer", "minimum": 0 },
+        "uri": { "type": "string", "format": "uri-reference" },
+        "encrypted": { "type": "boolean", "default": false }
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uri", "digest"],
+      "properties": {
+        "uri": { "type": "string", "format": "uri-reference" },
+        "digest": { "$ref": "#/$defs/digest" },
+        "pointer": { "type": "string" },
+        "line": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["start"],
+          "properties": {
+            "start": { "type": "integer", "minimum": 1 },
+            "end": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "observedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["principal"],
+      "properties": {
+        "principal": { "type": "string", "minLength": 1 },
+        "instance": { "type": "string", "minLength": 1 },
+        "adapter": { "type": "string", "minLength": 1 }
+      }
+    },
+    "repositoryState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projectId", "head", "dirty"],
+      "properties": {
+        "projectId": { "$ref": "#/$defs/opaqueId" },
+        "head": { "$ref": "#/$defs/gitRevision" },
+        "dirty": { "type": "boolean" },
+        "dirtyDigest": { "$ref": "#/$defs/digest" },
+        "branch": { "type": "string", "minLength": 1 },
+        "worktree": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "dirty": { "const": true } }, "required": ["dirty"] },
+          "then": {
+            "properties": { "dirtyDigest": { "$ref": "#/$defs/digest" } },
+            "required": ["dirtyDigest"]
+          }
+        }
+      ]
+    },
+    "versionedComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "digest": { "$ref": "#/$defs/digest" }
+      }
+    }
+  }
+}

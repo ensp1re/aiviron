@@ -1,0 +1,99 @@
+{
+  "apiVersion": "dev.create-agent/v1alpha1",
+  "kind": "ContextManifest",
+  "id": "ctx_01ABCDEFG",
+  "taskId": "tsk_01ABCDEFG",
+  "createdAt": "2026-07-18T12:00:00Z",
+  "requestDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "repository": {
+    "projectId": "prj_01ABCDEFG",
+    "head": "git:abcdef0123456789",
+    "dirty": false,
+    "branch": "main"
+  },
+  "compiler": {
+    "id": "context-compiler",
+    "version": "0.1.0",
+    "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "consumer": {
+    "adapter": "codex",
+    "model": "example-model",
+    "contextWindow": 128000
+  },
+  "purpose": "implement",
+  "budget": {
+    "maxTokens": 16000,
+    "reserveOutput": 4000,
+    "reserveTools": 2000,
+    "usedTokens": 3400
+  },
+  "items": [
+    {
+      "id": "item_01ABCDEFG",
+      "source": "repo:///AGENTS.md",
+      "kind": "project-instructions",
+      "trust": "trusted",
+      "sensitivity": "internal",
+      "instruction": true,
+      "provenance": [
+        {
+          "uri": "repo:///AGENTS.md",
+          "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "line": { "start": 1, "end": 40 },
+          "observedAt": "2026-07-18T11:59:00Z"
+        }
+      ],
+      "score": 1,
+      "tokenEstimate": 600,
+      "status": "included",
+      "reasons": ["mandatory project instructions"],
+      "content": {
+        "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "mediaType": "text/markdown",
+        "size": 2200,
+        "uri": "are-object://sha256/4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    {
+      "id": "item_02ABCDEFG",
+      "source": "repo:///vendor/large.js",
+      "kind": "source-file",
+      "trust": "mixed",
+      "sensitivity": "internal",
+      "instruction": false,
+      "provenance": [
+        {
+          "uri": "repo:///vendor/large.js",
+          "digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+        }
+      ],
+      "score": 0.05,
+      "tokenEstimate": 12000,
+      "status": "omitted",
+      "reasons": ["vendor file", "low marginal utility per token"]
+    }
+  ],
+  "sections": [
+    {
+      "id": "project-policy",
+      "order": 0,
+      "mandatory": true,
+      "itemIds": ["item_01ABCDEFG"],
+      "tokenEstimate": 600
+    }
+  ],
+  "renderings": [
+    {
+      "adapter": "codex",
+      "model": "example-model",
+      "content": {
+        "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "mediaType": "text/markdown",
+        "size": 11000
+      },
+      "tokenCount": 3400
+    }
+  ],
+  "warnings": []
+}

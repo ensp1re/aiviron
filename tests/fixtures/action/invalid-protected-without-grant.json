@@ -1,0 +1,15 @@
+{
+  "apiVersion": "dev.create-agent/v1alpha1",
+  "kind": "ActionReceipt",
+  "id": "receipt_01ABCDEFG",
+  "requestId": "action_01ABCDEFG",
+  "previewId": "preview_01ABCDEFG",
+  "status": "succeeded",
+  "risk": "R4",
+  "argumentsDigest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+  "startedAt": "2026-07-18T12:00:00Z",
+  "finishedAt": "2026-07-18T12:00:02Z",
+  "output": { "digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999", "mediaType": "application/json", "size": 10 },
+  "policyDecisionId": "poldec_01ABCDEFG",
+  "repository": { "projectId": "prj_01ABCDEFG", "head": "git:abcdef0", "dirty": false }
+}
