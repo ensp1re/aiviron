@@ -2,14 +2,14 @@
   "name": "arenv",
   "version": "0.1.0",
   "type": "module",
-  "description": "Subscription-first project environments and continuity for AI coding agents",
+  "description": "A shared project workspace for better AI-assisted development",
   "keywords": [
     "ai",
     "agents",
+    "ai-workspace",
     "coding-agents",
-    "codex",
-    "claude-code",
-    "gemini",
+    "developer-tools",
+    "context-management",
     "cli",
     "handoff",
     "local-first"
@@ -28,7 +28,7 @@
     "bin/",
     "src/",
     "schemas/",
-    "docs/subscription-first-workflow.md",
+    "docs/workflow.md",
     "docs/continuity-spike.md"
   ],
   "bin": {
