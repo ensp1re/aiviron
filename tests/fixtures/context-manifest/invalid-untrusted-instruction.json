@@ -10,6 +10,12 @@
   "consumer": { "adapter": "codex" },
   "purpose": "implement",
   "budget": { "maxTokens": 1000, "reserveOutput": 100, "reserveTools": 100, "usedTokens": 100 },
+  "scope": {
+    "mode": "closed",
+    "files": [],
+    "expansionCommand": "npx aiviron context add --file <path> --reason <why>",
+    "enforcement": "checkpoint-handoff-verify-complete"
+  },
   "items": [
     {
       "id": "item_01ABCDEFG",

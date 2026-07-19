@@ -1,123 +1,138 @@
 # Aiviron
 
-**A shared project workspace for better AI-assisted development.**
+**A ready-to-use workspace for AI coding agents.**
 
-Aiviron gives AI coding agents a consistent workspace for understanding a project, compiling relevant repository context, tracking the current task, preserving progress, and continuing work across tools and sessions.
+Aiviron prepares any Git repository so Codex, Claude, and other coding agents can understand the project, work with focused context, verify changes, preserve progress, and continue across tools or sessions.
+
+It does not replace your AI application. It improves the environment around it.
+
+## Quick start
 
 Requires Git and Node.js 22.13 or newer.
 
 ```bash
-# Initialize the current repository
+cd your-repository
 npx aiviron .
-
-# Start durable work
-npx aiviron task start --objective "Implement the selected change" --agent codex
-
-# Refresh intelligence, compile context, and launch Codex
-npx aiviron continue --agent codex
-
-# Checkpoint, rebuild context, and launch Claude later
-npx aiviron switch --to claude \
-  --summary "Implementation complete; verification remains" \
-  --next "Run the focused regression suite"
 ```
 
-Aiviron generates a canonical `.ai/` workspace plus agent instruction files without overwriting existing human instructions. Its local repository index, compiled context packets, and mutable task state stay in `.ai/state/` and are excluded from Git.
+Then open the repository in your preferred AI coding tool and prompt normally:
 
-## Automatic continuation
+> Add password reset to the authentication flow.
 
-`aiviron continue` reconstructs the active task, detects repository drift, refreshes the local index, compiles relevant evidence under one total token budget, and launches the current agent with the combined packet. When an interactive CLI exits successfully, Aiviron captures an automatic checkpoint.
+That is the complete user workflow. You do not need to manually create Aiviron tasks, build context packets, record checkpoints, or operate a separate agent runner.
 
-`aiviron switch` checkpoints before changing the writer, compiles a destination-specific packet, and launches the new agent. A dry run previews the redacted invocation without changing the active writer.
+## What happens automatically
 
-```bash
-npx aiviron continue --agent codex
-npx aiviron continue --agent codex-oss --local-provider ollama
-npx aiviron switch --to claude
-npx aiviron switch --to codex-app
+The generated project instructions teach the active agent to follow the shared harness:
 
-# Prepare files without opening an agent
-npx aiviron continue --no-launch
-
-# Preview without launching or persisting a handoff
-npx aiviron switch --to claude --dry-run --json
+```text
+understand request
+→ define completion criteria
+→ select relevant files
+→ create a focused plan
+→ implement
+→ verify
+→ preserve task state and evidence
 ```
 
-Codex and Claude CLIs receive a compact initial instruction to load `.ai/state/continuation/latest.md`; keeping the full packet out of process arguments avoids command-line size and process-list exposure. Codex App opens the repository and discovers the same packet through the generated `AGENTS.md`.
+Context is closed by default. The agent is instructed to inspect and edit only files selected for the task. If another file becomes necessary, it records why, expands the scope, and rebuilds the bounded context before continuing.
 
-## Repository intelligence and context
+Aiviron also checks changed files at lifecycle boundaries, so an agent cannot checkpoint, hand off, verify, or complete work with undeclared out-of-context changes.
 
-`aiviron inspect` scans Git-visible text files, detects stacks, manifests, commands, repository shape, symbols, and local dependency edges, then builds a local SQLite FTS index. `aiviron context build` combines lexical and structural evidence using a frozen reciprocal-rank-fusion profile, keeps mandatory agent instructions, applies source-authority penalties, and packs the result under the requested token budget.
+## Switch agents without starting over
+
+If you reach a Codex limit, close it and open the same repository in Claude. Then say:
+
+> Continue the current task.
+
+The destination agent reads the repository-owned task state, current plan, selected context, Git diff, decisions, failures, verification evidence, and remaining work. The same approach works in the opposite direction and with other agents that follow repository instructions.
+
+Private reasoning, chat history, authentication, and previous permissions are never transferred.
+
+## What Aiviron creates
+
+Aiviron adds a small provider-neutral workspace without overwriting existing human instructions:
+
+```text
+.ai/
+├── README.md
+├── config.yaml
+├── context/
+├── repository/
+├── sessions/
+└── state/          local, ignored runtime state
+
+AGENTS.md           shared agent instructions
+CLAUDE.md           Claude projection, when selected
+GEMINI.md           Gemini projection, when selected
+```
+
+The generated environment provides:
+
+- repository-native instructions for every selected agent;
+- a local repository index with symbols and dependency relationships;
+- explainable, token-budgeted context selection;
+- closed task-specific file scope;
+- acceptance criteria and focused execution plans;
+- verification receipts bound to the exact repository state;
+- durable checkpoints, decisions, failures, and next actions;
+- portable session and agent handoffs.
+
+Mutable state and compiled packets remain under `.ai/state/` and are excluded from Git. The stable environment configuration and instruction files can be committed so every agent sees the same project contract.
+
+## Context efficiency
+
+Aiviron does not place the whole repository into every prompt. It selects relevant source evidence using lexical matches, symbols, file paths, and local dependency relationships, then packs that evidence under a fixed token budget.
+
+Clean unchanged repositories reuse the local index without rereading every file. Only selected files enter the agent packet; verification programs may inspect whatever the project itself requires, but their source files are not copied into model context.
+
+## Optional diagnostics
+
+Normal work does not require these commands. They are available for inspection, debugging, and automation:
 
 ```bash
-# Human-readable repository report
+# Inspect detected repository structure and commands
 npx aiviron inspect
 
-# Machine-readable report
-npx aiviron inspect --json
+# Explain what entered the bounded context
+npx aiviron context build --task "Trace session expiration" --explain
 
-# Use the active task objective
-npx aiviron context build --for claude --purpose implement
+# Validate that changed files remain inside the active scope
+npx aiviron context check
 
-# Or compile for an explicit objective
-npx aiviron context build \
-  --task "Trace session TTL configuration" \
-  --for codex \
-  --budget 4096
+# Show the current durable task state
+npx aiviron task status
 ```
 
-Every compiled packet has a schema-valid manifest with repository revision, dirty-state evidence, provenance, selection reasons, scores, content digests, and exact token accounting.
+The lower-level task, context, verification, continuation, and handoff commands are primarily the protocol used by generated agent instructions. They remain available for advanced workflows without becoming part of the everyday user experience.
 
-To acquire a repository and start a task in one operation:
+## Working on a remote repository
+
+You can also acquire a GitHub repository and prepare it in one operation:
 
 ```bash
 npx aiviron work owner/repository \
-  --objective "Implement the selected change" \
-  --agent primary
+  --objective "Implement the requested change" \
+  --agent codex
 ```
 
-The GitHub path uses the authenticated `gh` account. It clones directly when writable and otherwise creates and clones your fork. See the [workflow guide](docs/workflow.md) and [continuity guide](docs/continuity-spike.md).
-
-## What Aiviron owns
-
-Aiviron leaves each agent's interface and execution flow intact. It provides the shared project layer around them:
-
-- repository-native agent instructions;
-- deterministic repository inventory, symbols, and dependency edges;
-- explainable, token-budgeted context packets;
-- automatic drift-aware continuation and checkpointed agent switching;
-- the active objective and current agent;
-- Git revision, branch, diff, and drift evidence;
-- checkpoints, decisions, failures, and next actions;
-- portable handoff capsules and resume packets.
-
-It does not copy private reasoning, chat history, authentication, or permissions between agents.
+Aiviron uses the authenticated `gh` account, cloning directly when writable and otherwise creating and cloning your fork.
 
 ## Local development
 
 ```bash
 npm install
 npm test
-npm run aiviron -- --dry-run
 npm run aiviron -- .
-npm run aiviron -- inspect
-npm run aiviron -- task start --objective "Describe the task" --agent codex
-npm run aiviron -- context build --for codex --explain
-npm run aiviron -- continue --agent codex --dry-run
-npm run aiviron -- switch --to claude --dry-run
 ```
-
-The public source includes the runtime, versioned schemas, focused documentation, and runtime tests.
 
 ## Current limits
 
-- Continuity currently targets one worktree and one writing agent at a time.
-- Repository indexing currently performs a safe full rebuild; incremental updates are planned.
-- Structural extraction uses deterministic built-in language heuristics; parser-backed expansion is planned.
-- Built-in launch adapters currently cover Codex CLI, Claude Code, Codex OSS, and Codex App.
-- Interactive CLI exits receive an automatic checkpoint; desktop-app sessions still require an explicit checkpoint or switch when work is ready to hand off.
-- Codex App does not accept initial-prompt injection from its CLI launcher, so it discovers the latest packet through the generated repository instructions.
-- Prior permissions never transfer; the destination agent must reauthorize effects.
+- Aiviron coordinates one writing agent per worktree.
+- Dirty or newly committed revisions currently receive a safe full index refresh.
+- Structural extraction uses deterministic built-in language heuristics.
+- Native desktop applications rely on generated repository instructions because they do not all expose lifecycle hooks.
+- Previous permissions never transfer to another agent or session.
 
 ## License
 

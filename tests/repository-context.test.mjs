@@ -70,6 +70,8 @@ test("repository inspection persists an ignored SQLite intelligence index", asyn
   const second = await inspectRepository({ cwd: repo, clock: () => new Date("2026-07-19T00:11:00.000Z") });
 
   assert.equal(first.digest, second.digest);
+  assert.equal(first.performance.cacheHit, false);
+  assert.equal(second.performance.cacheHit, true);
   assert.equal(first.persisted, true);
   assert.ok(first.inventory.indexedFiles >= 10);
   assert.ok(first.inventory.indexedChunks >= first.inventory.indexedFiles);

@@ -78,7 +78,7 @@ test("task start creates an isolated branch and survives a fresh status read", a
 test("checkpoint emits a schema-valid content-addressed capsule", async (t) => {
   const repo = await fixtureRepository();
   t.after(() => rm(repo, { recursive: true, force: true }));
-  await startTask({ cwd: repo, objective: "Fix checkout timeout", agent: "codex" });
+  await startTask({ cwd: repo, objective: "Fix checkout timeout", agent: "codex", files: ["app.mjs"] });
   await writeFile(join(repo, "app.mjs"), "export const value = 2;\n");
 
   const result = await checkpointTask({
@@ -107,7 +107,7 @@ test("checkpoint emits a schema-valid content-addressed capsule", async (t) => {
 test("handoff changes the active agent and resume reconstructs operational state", async (t) => {
   const repo = await fixtureRepository();
   t.after(() => rm(repo, { recursive: true, force: true }));
-  await startTask({ cwd: repo, objective: "Fix checkout timeout", agent: "codex" });
+  await startTask({ cwd: repo, objective: "Fix checkout timeout", agent: "codex", files: ["app.mjs"] });
   await writeFile(join(repo, "app.mjs"), "export const value = 2;\n");
 
   const handedOff = await handoffTask({
@@ -179,8 +179,8 @@ test("work clones a repository and starts its durable task in one operation", as
   assert.deepEqual(result.environment.agents, ["codex", "claude"]);
   assert.equal(result.task.currentAgent, "codex");
   assert.match(result.task.repository.branch, /^aiviron\/fix-checkout-timeout-/);
-  assert.match(await readFile(join(result.acquisition.destination, "AGENTS.md"), "utf8"), /subscription authentication/);
-  assert.match(await readFile(join(result.acquisition.destination, "CLAUDE.md"), "utf8"), /task resume --agent claude/);
+  assert.match(await readFile(join(result.acquisition.destination, "AGENTS.md"), "utf8"), /operate that harness automatically/);
+  assert.match(await readFile(join(result.acquisition.destination, "CLAUDE.md"), "utf8"), /compile its context for claude/);
 
   const status = await taskStatus({ cwd: result.acquisition.destination });
   assert.equal(status.task.taskId, result.task.taskId);

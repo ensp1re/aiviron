@@ -8,7 +8,7 @@ import { stableOpaqueId } from "./identity.mjs";
 import { putObject, writeJsonAtomic, writeTextAtomic } from "./store.mjs";
 import { checkpointTask, handoffTask, renderResumePacket, taskStatus } from "./task-service.mjs";
 
-const runtimeVersion = "0.3.0";
+const runtimeVersion = "0.4.0";
 const supportedPurposes = new Set(["plan", "implement", "review", "debug", "handoff", "evaluate"]);
 
 function continuationPrefix({ task, status, agent, purpose }) {

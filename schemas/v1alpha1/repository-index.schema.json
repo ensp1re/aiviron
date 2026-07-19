@@ -67,7 +67,7 @@
     "warnings": { "type": "array", "items": { "type": "string", "minLength": 1 } },
     "performance": {
       "type": "object", "additionalProperties": false, "required": ["scanMs", "indexMs", "totalMs"],
-      "properties": { "scanMs": { "type": "number", "minimum": 0 }, "indexMs": { "type": "number", "minimum": 0 }, "totalMs": { "type": "number", "minimum": 0 } }
+      "properties": { "scanMs": { "type": "number", "minimum": 0 }, "indexMs": { "type": "number", "minimum": 0 }, "totalMs": { "type": "number", "minimum": 0 }, "cacheHit": { "type": "boolean" } }
     }
   },
   "$defs": {

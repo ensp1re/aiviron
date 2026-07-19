@@ -16,6 +16,7 @@
     "consumer",
     "purpose",
     "budget",
+    "scope",
     "items",
     "sections",
     "renderings"
@@ -52,6 +53,34 @@
         "reserveOutput": { "type": "integer", "minimum": 0 },
         "reserveTools": { "type": "integer", "minimum": 0 },
         "usedTokens": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "files", "expansionCommand", "enforcement"],
+      "properties": {
+        "mode": { "const": "closed" },
+        "files": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "access", "reason"],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+              },
+              "access": { "type": "string", "enum": ["read-only", "read-write"] },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "expansionCommand": { "type": "string", "minLength": 1 },
+        "enforcement": { "const": "checkpoint-handoff-verify-complete" }
       }
     },
     "items": {

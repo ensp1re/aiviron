@@ -2,7 +2,9 @@
 
 import {
   checkpointTask,
+  completeTask,
   handoffTask,
+  recordTaskPlan,
   resumeTask,
   startTask,
   taskStatus
@@ -13,6 +15,8 @@ import { initializeEnvironment } from "../src/environment/generator.mjs";
 import { compileContext } from "../src/context/compiler.mjs";
 import { inspectRepository } from "../src/intelligence/analyzer.mjs";
 import { continueTask, switchTask } from "../src/continuity/continuation-service.mjs";
+import { addContextExpansion, checkContextScope } from "../src/context/scope.mjs";
+import { verifyTask } from "../src/harness/verification.mjs";
 
 function parse(argv) {
   const [command, ...tokens] = argv;
@@ -31,7 +35,7 @@ function parse(argv) {
     const value = tokens[index + 1];
     if (value === undefined || value.startsWith("--")) throw new Error(`Missing value for --${key}`);
     index += 1;
-    if (["completed", "next", "decision", "failure"].includes(key)) {
+    if (["completed", "next", "decision", "failure", "accept", "constraint", "file", "step", "criterion", "step-done", "check"].includes(key)) {
       options[key] ||= [];
       options[key].push(value);
     } else {
@@ -47,7 +51,9 @@ function progressOptions(options) {
     completed: options.completed || [],
     nextActions: options.next || [],
     decisions: options.decision || [],
-    failures: options.failure || []
+    failures: options.failure || [],
+    completedCriteria: options.criterion || [],
+    completedSteps: options["step-done"] || []
   };
 }
 
@@ -58,12 +64,17 @@ Usage:
   aiviron init [directory] [--agents codex,claude] [--name <name>] [--dry-run]
   aiviron inspect [--json] [--no-cache]
   aiviron context build [--task <text>] [--budget <tokens>] [--for codex|claude|gemini] [--purpose <mode>] [--explain|--json]
+  aiviron context add --file <path> --reason <why> [--budget <tokens>] [--for <agent>]
+  aiviron context check [--json]
+  aiviron verify [--check <package-script>] [--json]
   aiviron continue [--agent codex|claude|codex-app|codex-oss] [--budget <tokens>] [--purpose <mode>] [--local-provider ollama|lmstudio] [--no-launch|--dry-run] [--json]
   aiviron switch --to <agent> [--summary <text>] [--completed <text>] [--next <text>] [--budget <tokens>] [--no-launch|--dry-run] [--json]
   aiviron work <repository> --objective <text> --agent <id> [--directory <path>] [--fork auto|always|never]
-  aiviron task start --objective <text> --agent <id> [--branch <name>] [--no-branch]
+  aiviron task start --objective <text> --agent <id> [--accept <criterion>] [--constraint <text>] [--file <path>] [--branch <name>] [--no-branch]
+  aiviron task plan --step <text> [--step <text>]
   aiviron task status [--json]
-  aiviron task checkpoint [--summary <text>] [--completed <text>] [--next <text>]
+  aiviron task checkpoint [--summary <text>] [--completed <text>] [--criterion <id>] [--step-done <id>] [--next <text>]
+  aiviron task complete [--waive-verification <reason>]
   aiviron task handoff --to <agent> [--summary <text>] [--next <text>]
   aiviron task resume [--agent <id>] [--json]
   aiviron task launch --agent codex|claude|codex-oss [--local-provider ollama|lmstudio] [--dry-run]
@@ -134,6 +145,24 @@ async function main() {
   }
   if (command === "context") {
     const subcommand = options._.shift();
+    if (subcommand === "add") {
+      const added = await addContextExpansion({ cwd: process.cwd(), file: options.file?.at(-1), reason: options.reason });
+      const result = await compileContext({
+        task: options.task || options.objective,
+        budgetTokens: options.budget ? Number(options.budget) : 2048,
+        agent: options.for || options.agent || added.task.currentAgent || "codex",
+        purpose: options.purpose || "implement"
+      });
+      process.stdout.write(`${JSON.stringify({ added: added.path, exists: added.exists, contextId: result.manifest.id, scope: result.manifest.scope }, null, 2)}\n`);
+      return;
+    }
+    if (subcommand === "check" || subcommand === "scope") {
+      const result = await checkContextScope({ cwd: process.cwd() });
+      if (options.json || subcommand === "scope") process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+      else process.stdout.write(result.ok ? `Context scope valid (${result.changed.length} changed files).\n` : `Context scope violation: ${result.violations.join(", ")}\n`);
+      if (!result.ok) process.exitCode = 2;
+      return;
+    }
     if (subcommand !== "build") throw new Error(continuityUsage());
     const result = await compileContext({
       task: options.task || options.objective,
@@ -153,6 +182,13 @@ async function main() {
     } else {
       process.stdout.write(result.rendering);
     }
+    return;
+  }
+  if (command === "verify") {
+    const result = await verifyTask({ checks: options.check || [] });
+    if (options.json) process.stdout.write(`${JSON.stringify({ receipt: result.receipt, receiptPath: result.receiptPath }, null, 2)}\n`);
+    else process.stdout.write(`Verification ${result.receipt.status}: ${result.receipt.results.map((item) => `${item.name}=${item.status}`).join(", ")}\nReceipt: ${result.receiptPath}\n`);
+    if (result.receipt.status !== "passed") process.exitCode = 1;
     return;
   }
   if (command === "continue") {
@@ -187,9 +223,17 @@ async function main() {
       objective: options.objective,
       agent: options.agent,
       branch: options.branch,
-      createTaskBranch: !options["no-branch"]
+      createTaskBranch: !options["no-branch"],
+      acceptanceCriteria: options.accept || [],
+      constraints: options.constraint || [],
+      files: options.file || []
     });
     process.stdout.write(`${JSON.stringify(result.task, null, 2)}\n`);
+    return;
+  }
+  if (subcommand === "plan") {
+    const result = await recordTaskPlan({ steps: options.step || [] });
+    process.stdout.write(`${JSON.stringify(result.task.plan, null, 2)}\n`);
     return;
   }
   if (subcommand === "status") {
@@ -201,6 +245,11 @@ async function main() {
   if (subcommand === "checkpoint") {
     const result = await checkpointTask(progressOptions(options));
     process.stdout.write(`${JSON.stringify({ checkpoint: result.checkpoint, capsulePath: result.capsulePath }, null, 2)}\n`);
+    return;
+  }
+  if (subcommand === "complete") {
+    const result = await completeTask({ waiveVerification: options["waive-verification"] });
+    process.stdout.write(`${JSON.stringify({ taskId: result.task.taskId, status: result.task.status, completedAt: result.task.completedAt }, null, 2)}\n`);
     return;
   }
   if (subcommand === "handoff") {

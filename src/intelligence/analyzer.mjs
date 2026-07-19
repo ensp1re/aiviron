@@ -238,6 +238,27 @@ export async function createRepositoryIndex({ cwd = process.cwd(), persist = tru
   if (indexPath !== ":memory:") {
     await assertSafeStatePath(repoRoot, indexPath);
     await mkdir(dirname(indexPath), { recursive: true });
+    if (await exists(indexPath)) {
+      const cached = new DatabaseSync(indexPath);
+      try {
+        const reportRow = cached.prepare("SELECT value FROM metadata WHERE key = 'report'").get();
+        const profileRow = cached.prepare("SELECT value FROM metadata WHERE key = 'profile'").get();
+        const snapshot = await repositorySnapshot(repoRoot, projectId);
+        const profileMatches = profileRow?.value === JSON.stringify(retrievalProfileRef);
+        if (reportRow?.value && profileMatches && !snapshot.dirty) {
+          const report = JSON.parse(reportRow.value);
+          if (report.repository.head === snapshot.head) {
+            report.generatedAt = clock().toISOString();
+            report.repository = snapshot;
+            report.performance = { scanMs: 0, indexMs: 0, totalMs: performance.now() - started, cacheHit: true };
+            return { db: cached, report, records: [] };
+          }
+        }
+      } catch {
+        // A missing or old metadata layout falls through to a safe rebuild.
+      }
+      cached.close();
+    }
   }
   const scanStarted = performance.now();
   const { files, skipped } = await readRepositoryFiles(repoRoot);
@@ -321,8 +342,9 @@ export async function createRepositoryIndex({ cwd = process.cwd(), persist = tru
     workspaces: packageMetadata.workspaces,
     shape: repositoryShape(records, packageMetadata),
     warnings: packageMetadata.warning ? [packageMetadata.warning] : [],
-    performance: { scanMs, indexMs, totalMs: performance.now() - started }
+    performance: { scanMs, indexMs, totalMs: performance.now() - started, cacheHit: false }
   };
+  insertMetadata.run("report", JSON.stringify(report));
   return { db, report, records };
 }
 

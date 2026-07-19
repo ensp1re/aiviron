@@ -56,10 +56,10 @@ test("Aiviron initializes a new subscription-first Git project", async (t) => {
 
   const agents = await readFile(join(target, "AGENTS.md"), "utf8");
   const claude = await readFile(join(target, "CLAUDE.md"), "utf8");
-  assert.match(agents, /normal installed-app\/CLI subscription authentication/);
-  assert.match(agents, /task resume --agent codex/);
-  assert.match(agents, /continuation\/latest\.md/);
-  assert.match(claude, /task resume --agent claude/);
+  assert.match(agents, /operate that harness automatically/);
+  assert.match(agents, /user should only need to describe work normally/);
+  assert.match(agents, /closed scope/);
+  assert.match(claude, /compile its context for claude/);
   assert.equal(await readFile(join(target, ".ai", ".gitignore"), "utf8"), "state/\n");
   const profilePath = join(target, ".ai", "repository", "profile.json");
   const initialProfile = await readFile(profilePath, "utf8");
@@ -121,7 +121,7 @@ test("generated environment carries a task from Codex to Claude without API stat
   await git(repo, "add", ".ai", "AGENTS.md", "CLAUDE.md");
   await git(repo, "commit", "-m", "initialize subscription agent environment");
 
-  await startTask({ cwd: repo, objective: "Fix checkout timeout", agent: "codex" });
+  await startTask({ cwd: repo, objective: "Fix checkout timeout", agent: "codex", files: ["checkout.mjs"] });
   await writeFile(join(repo, "checkout.mjs"), "export const timeout = 30;\n");
   const handoff = await handoffTask({
     cwd: repo,
@@ -157,7 +157,7 @@ test("Aiviron CLI exposes initialization and continuity commands", async (t) => 
   assert.equal(JSON.parse(planned.stdout).dryRun, true);
 
   const version = await execFileAsync(process.execPath, [aiviron, "--version"], { encoding: "utf8" });
-  assert.equal(version.stdout.trim(), "0.3.0");
+  assert.equal(version.stdout.trim(), "0.4.0");
 
   const primary = await execFileAsync(process.execPath, [aiviron, "primary", "--dry-run"], {
     cwd: parent,

@@ -1,49 +1,45 @@
 # Aiviron workflow
 
-Aiviron creates a shared, repository-owned workspace that AI coding agents can use to understand the project and continue ongoing work.
+Aiviron creates a repository-owned workspace that AI coding agents use automatically.
 
-## End-to-end flow
+## User workflow
 
-1. Initialize Aiviron in an existing repository or acquire a repository with `aiviron work`.
-2. Aiviron creates canonical `.ai/` project state and agent instruction files.
-3. Start a durable task on an isolated Git branch.
-4. Continue automatically: Aiviron refreshes the index, compiles context, checks drift, and launches the current agent.
-5. Work with the AI agent or tool you prefer.
-6. Switch automatically: Aiviron checkpoints the current work and launches the destination with a fresh packet.
-7. Resume later from the same repository-owned state.
+Initialize the repository once:
 
 ```bash
+cd your-repository
 npx aiviron .
-
-npx aiviron task start \
-  --objective "Implement the selected change" \
-  --agent codex
-
-npx aiviron continue --agent codex
-
-npx aiviron switch \
-  --to claude \
-  --summary "Implemented the change" \
-  --next "Run the focused regression suite"
 ```
 
-To acquire a repository and start work in one operation:
+Open that folder in Codex, Claude, or another compatible coding agent and describe the work normally. No separate Aiviron task session or manual context workflow is required.
 
-```bash
-npx aiviron work owner/repository \
-  --objective "Implement the selected change" \
-  --agent codex
-```
+If you switch tools or reach a usage limit, open the same repository in the next agent and ask it to continue the current task.
+
+## Agent workflow
+
+Generated repository instructions direct the agent through the internal lifecycle:
+
+1. Translate the request into an objective and observable completion criteria.
+2. Resume matching unfinished state or create a new task record.
+3. Record a bounded plan.
+4. Compile task-relevant repository context.
+5. Treat selected files as a closed scope and justify every expansion.
+6. Implement and run repository verification.
+7. Persist evidence, decisions, failures, progress, and remaining work.
+8. Complete the task or leave a checkpoint another agent can resume.
+
+The lower-level Aiviron commands implement this agent protocol. They remain available for diagnostics and advanced automation, but they are not the normal user interface.
 
 ## Workspace ownership
 
 - `.ai/config.yaml` defines the project workspace.
 - `.ai/repository/profile.json` records deterministic repository observations.
-- `.ai/context/` and `.ai/sessions/` define portable context and handoff behavior.
-- `.ai/state/repository/index.sqlite` stores the local FTS, symbol, and dependency index.
-- `.ai/state/context/` stores compiled manifests and rendered context packets.
-- `.ai/state/continuation/latest.md` is the current agent-ready continuation packet; adjacent manifests bind it to task, repository, budget, and provenance.
-- `.ai/state/` also contains mutable task state, checkpoints, and resume packets; it is excluded from Git.
-- Agent instruction files project the shared workspace into conventions that coding agents can discover.
+- `.ai/context/` and `.ai/sessions/` define portable context and handoff policy.
+- `.ai/state/repository/index.sqlite` stores the local search, symbol, and dependency index.
+- `.ai/state/context/` stores bounded context manifests and packets.
+- `.ai/state/tasks/<task-id>/` stores mutable task state, plans, verification receipts, checkpoints, capsules, and resume packets.
+- `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` project the shared contract into native agent instructions.
 
-Aiviron transfers the objective, repository revision and diff, evidence, decisions, failures, and bounded next actions. Private reasoning, chat history, authentication, and prior permissions stay with the original tool.
+Mutable `.ai/state/` data is local and ignored by Git. Stable environment configuration and instruction projections may be committed.
+
+Aiviron transfers project state rather than private model state. Authentication, permissions, private reasoning, and provider transcripts remain with their original tool.

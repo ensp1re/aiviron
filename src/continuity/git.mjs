@@ -61,9 +61,14 @@ function isLocalStatePath(path) {
   return path === localStatePrefix || path.startsWith(`${localStatePrefix}/`);
 }
 
-async function trackedAndUntrackedPaths(repoRoot) {
-  const output = await git(repoRoot, ["ls-files", "-co", "--exclude-standard", "-z"]);
-  return [...new Set(output.split("\0").filter(Boolean).filter((path) => !isLocalStatePath(path)))].sort();
+export async function changedPaths(repoRoot) {
+  const [tracked, untracked] = await Promise.all([
+    git(repoRoot, ["diff", "--name-only", "-z", "HEAD"]),
+    git(repoRoot, ["ls-files", "--others", "--exclude-standard", "-z"])
+  ]);
+  return [...new Set([...tracked.split("\0"), ...untracked.split("\0")]
+    .filter(Boolean)
+    .filter((path) => !isLocalStatePath(path)))].sort();
 }
 
 async function hashPath(repoRoot, path) {
@@ -102,17 +107,16 @@ async function worktreeDigest(repoRoot, paths) {
 }
 
 export async function repositorySnapshot(repoRoot, projectId) {
-  const [head, branch, paths, statusOutput] = await Promise.all([
+  const [head, branch, statusOutput] = await Promise.all([
     currentHead(repoRoot),
     currentBranch(repoRoot),
-    trackedAndUntrackedPaths(repoRoot),
     git(repoRoot, ["status", "--porcelain=v1", "-z", "--untracked-files=all"])
   ]);
-  const digest = await worktreeDigest(repoRoot, paths);
   const dirty = statusOutput
     .split("\0")
     .filter(Boolean)
     .some((record) => !isLocalStatePath(record.slice(3)));
+  const digest = dirty ? await worktreeDigest(repoRoot, await changedPaths(repoRoot)) : null;
   return {
     projectId,
     head: `git:${head}`,

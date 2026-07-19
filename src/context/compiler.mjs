@@ -7,8 +7,9 @@ import { putObject, readCurrentTask, writeJsonAtomic, writeTextAtomic } from "..
 import { createRepositoryIndex } from "../intelligence/analyzer.mjs";
 import { retrievalProfile, retrievalProfileRef } from "./retrieval-profile.mjs";
 import { estimateTokens, searchTokens } from "./tokens.mjs";
+import { bindContextScope, scopeFilesFromContext } from "./scope.mjs";
 
-const compilerVersion = "0.2.0";
+const compilerVersion = "0.4.0";
 const supportedPurposes = new Set(["plan", "implement", "review", "debug", "handoff", "evaluate"]);
 
 function overlapCount(left, right) {
@@ -216,6 +217,29 @@ function mandatoryCandidates(db, agent) {
   return candidates;
 }
 
+function expandedCandidates(db, expansions = []) {
+  const candidates = [];
+  for (const expansion of expansions) {
+    const row = db.prepare("SELECT content, lines FROM files WHERE path = ?").get(expansion.path);
+    if (!row) continue;
+    const selected = fileContent(db, expansion.path, 1, Math.min(Number(row.lines), 200));
+    if (!selected?.content) continue;
+    candidates.push({
+      path: expansion.path,
+      startLine: selected.startLine,
+      endLine: selected.endLine,
+      content: selected.content,
+      digest: sha256(selected.content),
+      estimatedTokens: estimateTokens(selected.content),
+      source: "explicit",
+      reasons: [`explicit context expansion: ${expansion.reason}`],
+      normalizedScore: 1,
+      mandatory: true
+    });
+  }
+  return candidates;
+}
+
 function overlaps(left, right) {
   return left.path === right.path && left.startLine <= right.endLine && right.startLine <= left.endLine;
 }
@@ -226,8 +250,12 @@ function markdownLanguage(path) {
   return aliases[extension] ?? extension ?? "text";
 }
 
-function renderHeader({ query, repository, agent, purpose, strategy, profile }) {
-  return `# Aiviron context packet\n\nObjective: ${query}\nConsumer: ${agent}\nPurpose: ${purpose}\nRepository: ${repository.head} on ${repository.branch ?? "detached"}\nRetrieval: ${strategy} (${profile.id}@${profile.version})\n`;
+function renderHeader({ query, repository, agent, purpose, strategy, profile, task }) {
+  const constraints = task?.constraints?.length ? `\nConstraints: ${task.constraints.join("; ")}` : "";
+  const criteria = task?.acceptanceCriteria?.length ? `\nDone when: ${task.acceptanceCriteria.map((item) => `[${item.status === "satisfied" ? "x" : " "}] ${item.text}`).join("; ")}` : "";
+  const plan = task?.plan?.steps?.length ? `\nPlan: ${task.plan.steps.map((item) => `[${item.status === "completed" ? "x" : " "}] ${item.text}`).join(" → ")}` : "";
+  const expansions = task?.contextScope?.expansions?.length ? `\nExplicit files: ${task.contextScope.expansions.map((item) => item.path).join(", ")}` : "";
+  return `# Aiviron task context\n\nObjective: ${query}${constraints}${criteria}${plan}\nRepository: ${repository.head}; agent: ${agent}; purpose: ${purpose}${expansions}\nScope: CLOSED. Inspect/edit only files below. Expand first with \`npx aiviron context add --file <path> --reason <why>\`.\n`;
 }
 
 function renderCandidate(candidate) {
@@ -240,6 +268,7 @@ function packCandidates({ header, mandatory, ranked, budgetTokens }) {
   const selected = [];
   let rendering = header;
   for (const candidate of mandatory) {
+    if (selected.some((current) => overlaps(current, candidate))) continue;
     const block = renderCandidate(candidate);
     if (estimateTokens(rendering + block) > budgetTokens) {
       throw new Error(`Mandatory instructions exceed the ${budgetTokens}-token context budget; increase --budget`);
@@ -268,7 +297,16 @@ async function resolveRequest(repoRoot, explicitQuery) {
   const query = explicit || task?.objective?.trim();
   if (!query) throw new Error("Context objective is required; pass --task <text> or start an Aiviron task");
   const taskId = task?.taskId ?? stableOpaqueId("tsk", query);
-  const details = explicit || (task ? [task.objective, ...(task.nextActions ?? []), ...(task.decisions ?? []), ...(task.failures ?? [])].join("\n") : query);
+  const details = explicit || (task ? [
+    task.objective,
+    ...(task.constraints ?? []),
+    ...(task.acceptanceCriteria ?? []).map((item) => item.text),
+    ...(task.plan?.steps ?? []).filter((item) => item.status !== "completed").map((item) => item.text),
+    ...(task.contextScope?.expansions ?? []).map((item) => `${item.path}: ${item.reason}`),
+    ...(task.nextActions ?? []),
+    ...(task.decisions ?? []),
+    ...(task.failures ?? [])
+  ].join("\n") : query);
   return { query, queryText: details, taskId, task };
 }
 
@@ -307,8 +345,8 @@ export async function compileContext({
     const lexical = lexicalCandidates(db, queryTokens);
     const structural = structuralCandidates(db, queryTokens);
     const fused = fuse(lexical, structural);
-    const mandatory = mandatoryCandidates(db, agent);
-    const header = renderHeader({ query: request.query, repository: report.repository, agent, purpose, strategy: "rrf-fusion", profile: retrievalProfileRef });
+    const mandatory = [...mandatoryCandidates(db, agent), ...expandedCandidates(db, request.task?.contextScope?.expansions)];
+    const header = renderHeader({ query: request.query, repository: report.repository, agent, purpose, strategy: "rrf-fusion", profile: retrievalProfileRef, task: request.task });
     const packed = packCandidates({ header, mandatory, ranked: fused, budgetTokens: budget });
     const createdAt = clock().toISOString();
     const requestDigest = sha256(JSON.stringify({ query: request.queryText, agent, purpose, budget, repository: report.digest, profile: retrievalProfileRef }));
@@ -340,6 +378,7 @@ export async function compileContext({
     const sections = [];
     if (instructionIds.length) sections.push({ id: "project-policy", order: 0, mandatory: true, itemIds: instructionIds, tokenEstimate: items.filter((item) => item.instruction).reduce((sum, item) => sum + item.tokenEstimate, 0) });
     if (evidenceIds.length) sections.push({ id: "repository-evidence", order: 1, mandatory: false, itemIds: evidenceIds, tokenEstimate: items.filter((item) => !item.instruction).reduce((sum, item) => sum + item.tokenEstimate, 0) });
+    const scopeFiles = scopeFilesFromContext(items, request.task?.contextScope?.expansions || []);
     const manifest = {
       apiVersion: "dev.aiviron/v1alpha1",
       kind: "ContextManifest",
@@ -352,6 +391,12 @@ export async function compileContext({
       consumer: { adapter: agent },
       purpose,
       budget: { maxTokens: budget, reserveOutput: 0, reserveTools: 0, usedTokens: packed.usedTokens },
+      scope: {
+        mode: "closed",
+        files: scopeFiles,
+        expansionCommand: "npx aiviron context add --file <path> --reason <why>",
+        enforcement: "checkpoint-handoff-verify-complete"
+      },
       items,
       sections,
       renderings: [{ adapter: agent, content: rendering, tokenCount: packed.usedTokens }],
@@ -366,6 +411,7 @@ export async function compileContext({
     const renderingPath = join(contextDirectory, `${contextId}.md`);
     await writeJsonAtomic(manifestPath, manifest);
     await writeTextAtomic(renderingPath, packed.rendering);
+    if (request.task) await bindContextScope(report.repository.worktree, request.task, manifest, clock);
     return {
       manifest,
       manifestPath,

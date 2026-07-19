@@ -28,6 +28,14 @@
     "reserveTools": 2000,
     "usedTokens": 3400
   },
+  "scope": {
+    "mode": "closed",
+    "files": [
+      { "path": "AGENTS.md", "access": "read-only", "reason": "mandatory project instructions" }
+    ],
+    "expansionCommand": "npx aiviron context add --file <path> --reason <why>",
+    "enforcement": "checkpoint-handoff-verify-complete"
+  },
   "items": [
     {
       "id": "item_01ABCDEFG",

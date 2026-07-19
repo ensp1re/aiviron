@@ -102,7 +102,7 @@ Launch adapters inject a compact instruction to load the complete packet from `.
 ## Current limits
 
 - The spike provides same-worktree continuity. Cross-machine transport still needs a safe export/import and Git push/restore protocol.
-- Repository indexing currently performs a full rebuild, and structural extraction uses built-in language heuristics.
+- Clean unchanged revisions reuse the local index; changed revisions receive a safe full refresh. Structural extraction uses built-in language heuristics.
 - Successful Codex, Claude, and Codex OSS CLI exits are checkpointed automatically. Desktop applications return control when the workspace opens, so their later edits still require an explicit checkpoint or switch.
 - Codex App opens the workspace but does not expose initial-prompt injection in its CLI launcher; generated repository instructions direct it to the persisted packet.
 - The capsule transfers operational evidence, not provider transcripts or hidden reasoning.

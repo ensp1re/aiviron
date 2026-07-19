@@ -1,6 +1,6 @@
 {
   "name": "aiviron",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "A shared project workspace for better AI-assisted development",
   "keywords": [
@@ -38,7 +38,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node --test tests/environment-generator.test.mjs tests/continuity-spike.test.mjs tests/repository-context.test.mjs tests/continuation-workflow.test.mjs tests/schema-conformance.test.mjs",
+    "test": "node --test tests/environment-generator.test.mjs tests/continuity-spike.test.mjs tests/repository-context.test.mjs tests/continuation-workflow.test.mjs tests/harness-loop.test.mjs tests/schema-conformance.test.mjs",
     "prepublishOnly": "npm test",
     "test:schemas": "node --test tests/schema-conformance.test.mjs",
     "aiviron": "node bin/aiviron.mjs"
