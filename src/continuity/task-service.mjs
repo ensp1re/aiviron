@@ -14,7 +14,7 @@ import { opaqueId, sha256, slugify, stableOpaqueId } from "./identity.mjs";
 import { putObject, readCurrentTask, statePaths, writeJsonAtomic, writeTextAtomic } from "./store.mjs";
 
 const schemaVersion = "aiviron-task-state/v1alpha1";
-const runtimeVersion = "0.2.0";
+const runtimeVersion = "0.3.0";
 
 function now(clock) {
   return clock().toISOString();
@@ -99,6 +99,12 @@ export async function startTask({ cwd = process.cwd(), objective, agent, branch,
 
 async function storeArtifacts(repoRoot, task, checkpoint, patch) {
   const json = (value) => `${JSON.stringify(value, null, 2)}\n`;
+  let contextManifest = json({ version: "continuity-fallback/v1", sources: ["task", "git", "checkpoint"] });
+  try {
+    contextManifest = await readFile(join(repoRoot, ".ai", "state", "continuation", "latest.json"), "utf8");
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
   const entries = {
     objective: await putObject(repoRoot, `# Objective\n\n${task.objective}\n`, "text/markdown"),
     state: await putObject(repoRoot, json({ task, checkpoint }), "application/json"),
@@ -106,7 +112,7 @@ async function storeArtifacts(repoRoot, task, checkpoint, patch) {
     evidence: await putObject(repoRoot, json({ repository: checkpoint.repository, summary: checkpoint.summary }), "application/json"),
     decisions: await putObject(repoRoot, json(task.decisions), "application/json"),
     failures: await putObject(repoRoot, json(task.failures), "application/json"),
-    contextManifest: await putObject(repoRoot, json({ version: "continuity-spike/v1", sources: ["task", "git", "checkpoint"] }), "application/json"),
+    contextManifest: await putObject(repoRoot, contextManifest, "application/json"),
     nextActions: await putObject(repoRoot, json(task.nextActions), "application/json"),
     permissions: await putObject(repoRoot, json({ transferable: false, note: "Destination must reauthorize all effects." }), "application/json"),
     environment: await putObject(repoRoot, json({ platform: process.platform, arch: process.arch, node: process.version }), "application/json")

@@ -7,7 +7,7 @@ import { promisify } from "node:util";
 import { stableOpaqueId } from "../continuity/identity.mjs";
 
 const execFileAsync = promisify(execFile);
-const generatorVersion = "0.2.0";
+const generatorVersion = "0.3.0";
 const repositoryProfileSchema = "aiviron-repository-profile/v1alpha1";
 const managedStart = "<!-- aiviron:managed:start -->";
 const managedEnd = "<!-- aiviron:managed:end -->";
@@ -107,11 +107,11 @@ function yamlString(value) {
 }
 
 function renderConfig({ projectId, projectName, agents }) {
-  return `# Aiviron configuration; human-owned after generation\napiVersion: dev.aiviron/v1alpha1\nkind: AgentEnvironment\nmetadata:\n  projectId: ${yamlString(projectId)}\n  name: ${yamlString(projectName)}\nspec:\n  mode: subscription-first\n  agents:\n${agents.map((agent) => `    - ${yamlString(agent)}`).join("\n")}\n  canonicalState: .ai\n  runtimeState: .ai/state\n  intelligence:\n    index: .ai/state/repository/index.sqlite\n    retrievalProfile: hybrid-frozen-v1\n  context:\n    defaultBudgetTokens: 2048\n    strategy: hybrid\n  providerApi:\n    required: false\n    enabled: false\n  sessions:\n    handoff: operational-capsule\n    writerLease: one-agent-per-worktree\n  privacy:\n    transferProviderTranscript: false\n    transferHiddenReasoning: false\n`;
+  return `# Aiviron configuration; human-owned after generation\napiVersion: dev.aiviron/v1alpha1\nkind: AgentEnvironment\nmetadata:\n  projectId: ${yamlString(projectId)}\n  name: ${yamlString(projectName)}\nspec:\n  mode: subscription-first\n  agents:\n${agents.map((agent) => `    - ${yamlString(agent)}`).join("\n")}\n  canonicalState: .ai\n  runtimeState: .ai/state\n  intelligence:\n    index: .ai/state/repository/index.sqlite\n    retrievalProfile: hybrid-frozen-v1\n  context:\n    defaultBudgetTokens: 2048\n    strategy: hybrid\n  continuation:\n    packet: .ai/state/continuation/latest.md\n    defaultBudgetTokens: 4096\n    automaticCheckpoint: interactive-cli-exit\n  providerApi:\n    required: false\n    enabled: false\n  sessions:\n    handoff: operational-capsule\n    writerLease: one-agent-per-worktree\n  privacy:\n    transferProviderTranscript: false\n    transferHiddenReasoning: false\n`;
 }
 
 function renderEnvironmentReadme({ projectName, agents }) {
-  return `${managedStart}\n# AI working environment for ${projectName}\n\nThis directory is the shared, provider-neutral project state for ${agents.join(", ")}. The installed agent application keeps its own native session, while this repository owns the durable task, repository index, compiled context, evidence, decisions, failures, Git state, and handoff packet.\n\n## Subscription-first contract\n\n- Use each installed agent through its normal account or subscription login.\n- Do not request an API key merely to use this environment.\n- Never treat a provider transcript or hidden reasoning as portable project state.\n- Keep one writing agent per worktree. Checkpoint before switching agents.\n\n## Daily workflow\n\n\`\`\`bash\naiviron inspect\naiviron task start --objective "Describe the task" --agent codex\naiviron context build --for codex --purpose implement\naiviron task status\naiviron task checkpoint --summary "What changed" --next "What remains"\naiviron task handoff --to claude --summary "Ready to continue"\naiviron task launch --agent claude\n\`\`\`\n\nRepository intelligence, compiled packets, and mutable task data live in \`.ai/state/\` and are excluded from Git. Commit the rest of \`.ai/\` and the native instruction projections so every agent sees the same operating contract.\n${managedEnd}`;
+  return `${managedStart}\n# AI working environment for ${projectName}\n\nThis directory is the shared, provider-neutral project state for ${agents.join(", ")}. The installed agent application keeps its own native session, while this repository owns the durable task, repository index, compiled context, evidence, decisions, failures, Git state, and handoff packet.\n\n## Subscription-first contract\n\n- Use each installed agent through its normal account or subscription login.\n- Do not request an API key merely to use this environment.\n- Never treat a provider transcript or hidden reasoning as portable project state.\n- Keep one writing agent per worktree. Aiviron checkpoints before a switch.\n\n## Daily workflow\n\n\`\`\`bash\naiviron task start --objective "Describe the task" --agent codex\naiviron continue --agent codex\naiviron switch --to claude --summary "Ready to continue" --next "What remains"\n\`\`\`\n\n\`continue\` refreshes repository intelligence, compiles bounded context, checks drift, and launches the current agent. \`switch\` checkpoints first, projects the same task to the destination, and launches it with a fresh continuation packet. Use \`--no-launch\` to prepare state without opening an agent, or \`--dry-run\` to inspect a redacted launch.\n\nRepository intelligence, compiled packets, continuation packets, and mutable task data live in \`.ai/state/\` and are excluded from Git. Commit the rest of \`.ai/\` and the native instruction projections so every agent sees the same operating contract.\n${managedEnd}`;
 }
 
 function renderContextPolicy() {
@@ -119,12 +119,12 @@ function renderContextPolicy() {
 }
 
 function renderSessionPolicy() {
-  return `# Generated by Aiviron ${generatorVersion}\napiVersion: dev.aiviron/session-policy/v1alpha1\nkind: SessionPolicy\nspec:\n  checkpoint: explicit-and-handoff\n  writerLease: one-agent-per-worktree\n  destinationReauthorizesEffects: true\n  driftPolicy: inspect-before-editing\n  portableState:\n    - objective\n    - repository\n    - changes\n    - evidence\n    - decisions\n    - failures\n    - next-actions\n`;
+  return `# Generated by Aiviron ${generatorVersion}\napiVersion: dev.aiviron/session-policy/v1alpha1\nkind: SessionPolicy\nspec:\n  checkpoint: interactive-exit-and-handoff\n  writerLease: one-agent-per-worktree\n  destinationReauthorizesEffects: true\n  driftPolicy: inspect-before-editing\n  portableState:\n    - objective\n    - repository\n    - changes\n    - evidence\n    - decisions\n    - failures\n    - next-actions\n`;
 }
 
 function renderProjection(agent) {
   const names = { codex: "Codex", claude: "Claude", gemini: "Gemini" };
-  return `${managedStart}\n## Shared Aiviron environment\n\nThis repository uses a provider-neutral environment in \`.ai/\`. ${names[agent]} uses the user's normal installed-app/CLI subscription authentication; do not request a provider API key for ordinary work.\n\nAt the beginning of a task or after switching agents:\n\n1. Read \`.ai/README.md\`.\n2. If \`.ai/state/current.json\` exists, run \`aiviron task resume --agent ${agent}\` and follow the resulting resume contract.\n3. Run \`aiviron context build --for ${agent} --purpose implement\` and use the returned evidence before editing.\n4. Inspect the current branch, Git status, diff, and relevant verification before editing.\n\nBefore switching agents, checkpoint meaningful progress with \`aiviron task checkpoint\` or create a handoff with \`aiviron task handoff --to <agent>\`. Persist objective progress, decisions, failures, evidence, and bounded next actions—not private reasoning or provider transcripts.\n${managedEnd}`;
+  return `${managedStart}\n## Shared Aiviron environment\n\nThis repository uses a provider-neutral environment in \`.ai/\`. ${names[agent]} uses the user's normal installed-app/CLI subscription authentication; do not request a provider API key for ordinary work.\n\nAt the beginning of a task or after switching agents:\n\n1. Read \`.ai/README.md\`.\n2. If \`.ai/state/continuation/latest.md\` exists, read and follow that continuation packet. Otherwise, if \`.ai/state/current.json\` exists, run \`aiviron task resume --agent ${agent}\` and compile context with \`aiviron context build --for ${agent}\`.\n3. Inspect the current branch, Git status, diff, and relevant verification before editing.\n\nBefore switching agents, use \`aiviron switch --to <agent>\` from the controlling terminal. Persist objective progress, decisions, failures, evidence, and bounded next actions—not private reasoning or provider transcripts.\n${managedEnd}`;
 }
 
 function upsertManagedBlock(existing, block) {
@@ -302,8 +302,8 @@ export async function initializeEnvironment({
       "Review and commit the generated project environment.",
       "Inspect the repository with: aiviron inspect",
       "Start work with: aiviron task start --objective \"...\" --agent codex",
-      "Compile task context with: aiviron context build --for codex",
-      "Switch with: aiviron task handoff --to claude --launch"
+      "Continue automatically with: aiviron continue --agent codex",
+      "Switch automatically with: aiviron switch --to claude"
     ]
   };
 }

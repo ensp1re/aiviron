@@ -14,6 +14,7 @@ const schemaFiles = [
   "common.schema.json",
   "runtime-event.schema.json",
   "repository-index.schema.json",
+  "continuation-manifest.schema.json",
   "context-manifest.schema.json",
   "memory-record.schema.json",
   "action.schema.json",
@@ -26,6 +27,8 @@ const cases = [
   ["runtime-event.schema.json", "runtime-event/invalid-missing-actor.json", false],
   ["repository-index.schema.json", "repository-index/valid.json", true],
   ["repository-index.schema.json", "repository-index/invalid-escaped-path.json", false],
+  ["continuation-manifest.schema.json", "continuation-manifest/valid.json", true],
+  ["continuation-manifest.schema.json", "continuation-manifest/invalid-missing-packet.json", false],
   ["context-manifest.schema.json", "context-manifest/valid.json", true],
   ["context-manifest.schema.json", "context-manifest/invalid-untrusted-instruction.json", false],
   ["memory-record.schema.json", "memory-record/valid.json", true],
@@ -93,6 +96,12 @@ test("valid context manifest stays inside its declared usable token budget", asy
     .filter((item) => item.status === "included" || item.status === "transformed")
     .reduce((sum, item) => sum + item.tokenEstimate, 0);
   assert.ok(includedTokens <= manifest.budget.usedTokens);
+});
+
+test("valid continuation manifest stays inside its total token budget", async () => {
+  const manifest = await readJson(join(root, "tests", "fixtures", "continuation-manifest", "valid.json"));
+  assert.ok(manifest.budget.usedTokens <= manifest.budget.maxTokens);
+  assert.ok(manifest.budget.usedTokens <= manifest.budget.orchestrationTokens + manifest.budget.contextTokens);
 });
 
 test("valid capsule references every mandatory artifact with the same digest", async () => {

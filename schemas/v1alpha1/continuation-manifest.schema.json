@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aiviron.dev/v1alpha1/continuation-manifest.schema.json",
+  "title": "Aiviron automatic continuation manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "id", "taskId", "createdAt", "agent", "purpose", "repository", "drifted", "runtime", "budget", "sourceCheckpointId", "resume", "contextManifest", "packet", "warnings"],
+  "properties": {
+    "apiVersion": { "const": "dev.aiviron/v1alpha1" },
+    "kind": { "const": "ContinuationManifest" },
+    "id": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "taskId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "agent": { "type": "string", "minLength": 1 },
+    "purpose": { "enum": ["plan", "implement", "review", "debug", "handoff", "evaluate"] },
+    "repository": { "$ref": "common.schema.json#/$defs/repositoryState" },
+    "drifted": { "type": "boolean" },
+    "runtime": { "$ref": "common.schema.json#/$defs/versionedComponent" },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxTokens", "orchestrationTokens", "contextTokens", "usedTokens"],
+      "properties": {
+        "maxTokens": { "type": "integer", "minimum": 512 },
+        "orchestrationTokens": { "type": "integer", "minimum": 1 },
+        "contextTokens": { "type": "integer", "minimum": 1 },
+        "usedTokens": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "sourceCheckpointId": {
+      "anyOf": [
+        { "$ref": "common.schema.json#/$defs/opaqueId" },
+        { "type": "null" }
+      ]
+    },
+    "resume": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "contextManifest": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "packet": { "$ref": "common.schema.json#/$defs/objectRef" },
+    "warnings": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  }
+}

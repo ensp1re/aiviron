@@ -50,12 +50,15 @@ test("Aiviron initializes a new subscription-first Git project", async (t) => {
   assert.match(config, /mode: subscription-first/);
   assert.match(config, /required: false/);
   assert.match(config, /enabled: false/);
+  assert.match(config, /packet: \.ai\/state\/continuation\/latest\.md/);
+  assert.match(config, /automaticCheckpoint: interactive-cli-exit/);
   assert.doesNotMatch(config, /api[_-]?key/i);
 
   const agents = await readFile(join(target, "AGENTS.md"), "utf8");
   const claude = await readFile(join(target, "CLAUDE.md"), "utf8");
   assert.match(agents, /normal installed-app\/CLI subscription authentication/);
   assert.match(agents, /task resume --agent codex/);
+  assert.match(agents, /continuation\/latest\.md/);
   assert.match(claude, /task resume --agent claude/);
   assert.equal(await readFile(join(target, ".ai", ".gitignore"), "utf8"), "state/\n");
   const profilePath = join(target, ".ai", "repository", "profile.json");
@@ -154,7 +157,7 @@ test("Aiviron CLI exposes initialization and continuity commands", async (t) => 
   assert.equal(JSON.parse(planned.stdout).dryRun, true);
 
   const version = await execFileAsync(process.execPath, [aiviron, "--version"], { encoding: "utf8" });
-  assert.equal(version.stdout.trim(), "0.2.0");
+  assert.equal(version.stdout.trim(), "0.3.0");
 
   const primary = await execFileAsync(process.execPath, [aiviron, "primary", "--dry-run"], {
     cwd: parent,

@@ -1,0 +1,18 @@
+{
+  "apiVersion": "dev.aiviron/v1alpha1",
+  "kind": "ContinuationManifest",
+  "id": "con_01ABCDEFG",
+  "taskId": "tsk_01ABCDEFG",
+  "createdAt": "2026-07-19T12:00:00Z",
+  "agent": "codex",
+  "purpose": "implement",
+  "repository": { "projectId": "prj_01ABCDEFG", "head": "git:abcdef0123456789", "dirty": false, "branch": "main" },
+  "drifted": false,
+  "runtime": { "id": "aiviron-continuation", "version": "0.3.0" },
+  "budget": { "maxTokens": 4096, "orchestrationTokens": 300, "contextTokens": 2000, "usedTokens": 2300 },
+  "sourceCheckpointId": "chk_01ABCDEFG",
+  "resume": { "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "mediaType": "text/markdown", "size": 800, "uri": "aiviron-object://sha256/1111111111111111111111111111111111111111111111111111111111111111" },
+  "contextManifest": { "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "mediaType": "application/json", "size": 1600, "uri": "aiviron-object://sha256/2222222222222222222222222222222222222222222222222222222222222222" },
+  "packet": { "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "mediaType": "text/markdown", "size": 9200, "uri": "aiviron-object://sha256/3333333333333333333333333333333333333333333333333333333333333333" },
+  "warnings": []
+}

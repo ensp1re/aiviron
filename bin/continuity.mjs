@@ -12,6 +12,7 @@ import { launchTask } from "../src/continuity/agent-launcher.mjs";
 import { initializeEnvironment } from "../src/environment/generator.mjs";
 import { compileContext } from "../src/context/compiler.mjs";
 import { inspectRepository } from "../src/intelligence/analyzer.mjs";
+import { continueTask, switchTask } from "../src/continuity/continuation-service.mjs";
 
 function parse(argv) {
   const [command, ...tokens] = argv;
@@ -23,7 +24,7 @@ function parse(argv) {
       continue;
     }
     const key = token.slice(2);
-    if (["no-branch", "json", "launch", "dry-run", "help", "explain", "no-cache"].includes(key)) {
+    if (["no-branch", "no-launch", "json", "launch", "dry-run", "help", "explain", "no-cache"].includes(key)) {
       options[key] = true;
       continue;
     }
@@ -57,6 +58,8 @@ Usage:
   aiviron init [directory] [--agents codex,claude] [--name <name>] [--dry-run]
   aiviron inspect [--json] [--no-cache]
   aiviron context build [--task <text>] [--budget <tokens>] [--for codex|claude|gemini] [--purpose <mode>] [--explain|--json]
+  aiviron continue [--agent codex|claude|codex-app|codex-oss] [--budget <tokens>] [--purpose <mode>] [--local-provider ollama|lmstudio] [--no-launch|--dry-run] [--json]
+  aiviron switch --to <agent> [--summary <text>] [--completed <text>] [--next <text>] [--budget <tokens>] [--no-launch|--dry-run] [--json]
   aiviron work <repository> --objective <text> --agent <id> [--directory <path>] [--fork auto|always|never]
   aiviron task start --objective <text> --agent <id> [--branch <name>] [--no-branch]
   aiviron task status [--json]
@@ -65,6 +68,28 @@ Usage:
   aiviron task resume [--agent <id>] [--json]
   aiviron task launch --agent codex|claude|codex-oss [--local-provider ollama|lmstudio] [--dry-run]
 `;
+}
+
+function renderContinuationResult(result) {
+  const invocation = result.launched?.invocation;
+  const handoff = result.handoff?.checkpoint;
+  const automatic = result.checkpoint;
+  return {
+    ...result.summary,
+    preview: result.preview ?? false,
+    handoffCheckpointId: handoff?.checkpointId ?? null,
+    invocation: invocation ?? null,
+    automaticCheckpointId: automatic?.checkpointId ?? null
+  };
+}
+
+function writeContinuationResult(result, json) {
+  const output = renderContinuationResult(result);
+  if (json || result.launched || result.handoff) {
+    process.stdout.write(`${JSON.stringify(output, null, 2)}\n`);
+    return;
+  }
+  process.stdout.write(`Continuation packet ready for ${output.agent}\nPacket: ${output.packetPath}\nManifest: ${output.manifestPath}\nBudget: ${output.budget.usedTokens}/${output.budget.maxTokens} tokens\n`);
 }
 
 function renderInspection(report) {
@@ -128,6 +153,31 @@ async function main() {
     } else {
       process.stdout.write(result.rendering);
     }
+    return;
+  }
+  if (command === "continue") {
+    const result = await continueTask({
+      agent: options.agent,
+      purpose: options.purpose || "implement",
+      budgetTokens: options.budget ? Number(options.budget) : 4096,
+      localProvider: options["local-provider"],
+      dryRun: Boolean(options["dry-run"]),
+      launch: !options["no-launch"]
+    });
+    writeContinuationResult(result, options.json);
+    return;
+  }
+  if (command === "switch") {
+    const result = await switchTask({
+      to: options.to,
+      ...progressOptions(options),
+      purpose: options.purpose || "handoff",
+      budgetTokens: options.budget ? Number(options.budget) : 4096,
+      localProvider: options["local-provider"],
+      dryRun: Boolean(options["dry-run"]),
+      launch: !options["no-launch"]
+    });
+    writeContinuationResult(result, options.json);
     return;
   }
   if (command !== "task") throw new Error(continuityUsage());

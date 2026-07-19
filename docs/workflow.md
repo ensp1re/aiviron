@@ -6,34 +6,25 @@ Aiviron creates a shared, repository-owned workspace that AI coding agents can u
 
 1. Initialize Aiviron in an existing repository or acquire a repository with `aiviron work`.
 2. Aiviron creates canonical `.ai/` project state and agent instruction files.
-3. Inspect the repository to build a local SQLite intelligence index.
-4. Start a durable task on an isolated Git branch.
-5. Compile an explainable context packet for the active task and destination agent.
-6. Work with the AI agent or tool you prefer.
-7. Checkpoint completed work, decisions, failures, verification, and next actions.
-8. Resume later or hand the task to another agent using the repository-owned state.
+3. Start a durable task on an isolated Git branch.
+4. Continue automatically: Aiviron refreshes the index, compiles context, checks drift, and launches the current agent.
+5. Work with the AI agent or tool you prefer.
+6. Switch automatically: Aiviron checkpoints the current work and launches the destination with a fresh packet.
+7. Resume later from the same repository-owned state.
 
 ```bash
 npx aiviron .
 
-npx aiviron inspect
-
 npx aiviron task start \
   --objective "Implement the selected change" \
-  --agent primary
+  --agent codex
 
-npx aiviron context build \
-  --for codex \
-  --purpose implement \
-  --budget 2048
+npx aiviron continue --agent codex
 
-npx aiviron task checkpoint \
+npx aiviron switch \
+  --to claude \
   --summary "Implemented the change" \
   --next "Run the focused regression suite"
-
-npx aiviron task handoff \
-  --to next-agent \
-  --summary "Implementation complete; verification remains"
 ```
 
 To acquire a repository and start work in one operation:
@@ -41,7 +32,7 @@ To acquire a repository and start work in one operation:
 ```bash
 npx aiviron work owner/repository \
   --objective "Implement the selected change" \
-  --agent primary
+  --agent codex
 ```
 
 ## Workspace ownership
@@ -51,6 +42,7 @@ npx aiviron work owner/repository \
 - `.ai/context/` and `.ai/sessions/` define portable context and handoff behavior.
 - `.ai/state/repository/index.sqlite` stores the local FTS, symbol, and dependency index.
 - `.ai/state/context/` stores compiled manifests and rendered context packets.
+- `.ai/state/continuation/latest.md` is the current agent-ready continuation packet; adjacent manifests bind it to task, repository, budget, and provenance.
 - `.ai/state/` also contains mutable task state, checkpoints, and resume packets; it is excluded from Git.
 - Agent instruction files project the shared workspace into conventions that coding agents can discover.
 

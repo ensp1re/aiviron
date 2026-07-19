@@ -2,21 +2,24 @@ import { spawn } from "node:child_process";
 
 import { resumeTask } from "./task-service.mjs";
 
-export function buildInteractiveInvocation({ agent, repoRoot, taskId, resumePacket, localProvider }) {
+export function buildInteractiveInvocation({ agent, repoRoot, taskId, prompt, resumePacket, localProvider, promptDelivery = "argument" }) {
+  const initialPrompt = prompt ?? resumePacket;
   if (agent === "codex") {
     return {
       executable: "codex",
-      args: ["--cd", repoRoot, resumePacket],
+      args: ["--cd", repoRoot, initialPrompt],
       cwd: repoRoot,
-      surface: "interactive-cli"
+      surface: "interactive-cli",
+      promptDelivery
     };
   }
   if (agent === "claude" || agent === "claude-code") {
     return {
       executable: "claude",
-      args: ["--name", `Aiviron ${taskId}`, resumePacket],
+      args: ["--name", `Aiviron ${taskId}`, initialPrompt],
       cwd: repoRoot,
-      surface: "interactive-cli"
+      surface: "interactive-cli",
+      promptDelivery
     };
   }
   if (agent === "codex-oss") {
@@ -24,24 +27,35 @@ export function buildInteractiveInvocation({ agent, repoRoot, taskId, resumePack
     if (!new Set(["ollama", "lmstudio"]).has(provider)) throw new Error(`Unsupported Codex OSS provider: ${provider}`);
     return {
       executable: "codex",
-      args: ["--oss", "--local-provider", provider, "--cd", repoRoot, resumePacket],
+      args: ["--oss", "--local-provider", provider, "--cd", repoRoot, initialPrompt],
       cwd: repoRoot,
-      surface: "interactive-cli"
+      surface: "interactive-cli",
+      promptDelivery
+    };
+  }
+  if (agent === "codex-app") {
+    return {
+      executable: "codex",
+      args: ["app", repoRoot],
+      cwd: repoRoot,
+      surface: "desktop-app",
+      promptDelivery: "workspace-file"
     };
   }
   throw new Error(`No interactive launcher adapter is registered for agent: ${agent}`);
 }
 
-export async function launchTask({ cwd = process.cwd(), agent, localProvider, dryRun = false } = {}) {
-  const resumed = await resumeTask({ cwd, agent });
-  const invocation = buildInteractiveInvocation({
-    agent: resumed.task.currentAgent,
-    repoRoot: resumed.repoRoot,
-    taskId: resumed.task.taskId,
-    resumePacket: resumed.resumePacket,
-    localProvider
-  });
-  if (dryRun) return { ...resumed, invocation: { ...invocation, args: invocation.args.map((arg) => arg === resumed.resumePacket ? "<RESUME_PACKET>" : arg) } };
+export async function launchPrompt({ agent, repoRoot, taskId, prompt, localProvider, promptDelivery, dryRun = false, redaction = "<PROMPT>" }) {
+  const invocation = buildInteractiveInvocation({ agent, repoRoot, taskId, prompt, localProvider, promptDelivery });
+  if (dryRun) {
+    return {
+      invocation: {
+        ...invocation,
+        args: invocation.args.map((argument) => argument === prompt ? redaction : argument)
+      },
+      exitCode: null
+    };
+  }
 
   const exitCode = await new Promise((resolve, reject) => {
     const child = spawn(invocation.executable, invocation.args, {
@@ -57,5 +71,19 @@ export async function launchTask({ cwd = process.cwd(), agent, localProvider, dr
     });
   });
   if (exitCode !== 0) throw new Error(`${invocation.executable} exited with code ${exitCode}`);
-  return { ...resumed, invocation, exitCode };
+  return { invocation, exitCode };
+}
+
+export async function launchTask({ cwd = process.cwd(), agent, localProvider, dryRun = false } = {}) {
+  const resumed = await resumeTask({ cwd, agent });
+  const launched = await launchPrompt({
+    agent: resumed.task.currentAgent,
+    repoRoot: resumed.repoRoot,
+    taskId: resumed.task.taskId,
+    prompt: resumed.resumePacket,
+    localProvider,
+    dryRun,
+    redaction: "<RESUME_PACKET>"
+  });
+  return { ...resumed, ...launched };
 }
