@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "aiviron-repository-index/v1alpha1",
+  "generatedAt": "2026-07-19T00:00:00Z",
+  "generator": { "id": "aiviron-repository-indexer", "version": "0.2.0", "profile": { "id": "hybrid-frozen-v1", "version": "1.0.0", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111" } },
+  "repository": { "projectId": "prj_01ABCDEFG", "head": "git:abcdef0123456789", "dirty": false },
+  "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "persisted": false,
+  "indexPath": null,
+  "inventory": { "indexedFiles": 0, "indexedBytes": 0, "indexedChunks": 0, "symbols": 0, "edges": 0, "skipped": [{ "path": "../secret.txt", "reason": "unsupported-extension" }] },
+  "languages": [], "manifests": [], "commands": [], "packageManager": null, "workspaces": [],
+  "shape": { "monorepo": false, "hasTests": false, "hasCi": false, "hasContainers": false, "hasDocumentation": false, "topLevel": [] },
+  "warnings": [],
+  "performance": { "scanMs": 0, "indexMs": 0, "totalMs": 0 }
+}

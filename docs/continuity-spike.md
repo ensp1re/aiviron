@@ -1,7 +1,7 @@
-# Repository continuity spike
+# Repository intelligence and continuity
 
-**Status:** executable Phase 0 spike; not a production compatibility promise
-**Scope:** acquire one repository, keep one active task, checkpoint operational state, and resume it in another interactive agent runtime
+**Status:** executable v0.2 vertical slice; contracts remain alpha
+**Scope:** inspect one repository, compile bounded task context, keep one active task, checkpoint operational state, and resume it in another interactive agent runtime
 
 ## Initialize a project
 
@@ -11,7 +11,22 @@ npx aiviron . --agents codex,claude
 npx aiviron init . --agents codex,claude
 ```
 
-Initialization creates the provider-neutral `.ai/` environment and managed sections in `AGENTS.md` and `CLAUDE.md`. Existing human instructions outside the managed section are preserved. The generated configuration explicitly selects installed subscription authentication and disables API-key requirements. `--dry-run` returns the exact file plan without creating a directory, initializing Git, or writing files.
+Initialization creates the provider-neutral `.ai/` environment and managed sections in `AGENTS.md` and `CLAUDE.md`. Existing human instructions outside the managed section are preserved. `--dry-run` returns the exact file plan without creating a directory, initializing Git, or writing files.
+
+## Inspect and compile context
+
+```bash
+npx aiviron inspect
+npx aiviron context build \
+  --task "Trace the session timeout configuration" \
+  --for codex \
+  --budget 2048 \
+  --explain
+```
+
+Inspection considers Git-visible text files, refuses symbolic-link content, detects manifests and runnable package scripts, extracts deterministic symbols and local import edges, and persists an ignored SQLite FTS index. Context compilation combines lexical and structural rankings with a versioned retrieval profile, includes the destination agent's instructions, and emits both a rendered packet and a schema-valid manifest under `.ai/state/context/`.
+
+If a durable task is active, its objective, next actions, decisions, and failures become the context query. `--task` can supply an objective directly. `--explain` reports every included source, score, token estimate, and selection reason.
 
 ## One-command workspace start
 
@@ -23,7 +38,7 @@ npx aiviron work openai/codex \
 
 For a GitHub repository, `--fork auto` is the default. The command asks the authenticated GitHub CLI for `viewerPermission`: it clones the source directly for `WRITE`, `MAINTAIN`, or `ADMIN`; otherwise it creates the user's fork, clones it as `origin`, and records the source as `upstream`. `--fork always` and `--fork never` override that decision. GitHub acquisition requires a working `gh` login. A local path or non-GitHub Git URL uses `git clone` directly.
 
-The command refuses an existing destination, requires an initial commit, creates an `are/<task>` branch, generates the subscription-first environment, and refuses to replace another active task. The generated environment is an intentional initial change on the new task branch so the user can review and commit it with the project.
+The command refuses an existing destination, requires an initial commit, creates an `aiviron/<task>` branch, generates the shared environment, and refuses to replace another active task. The generated environment is an intentional initial change on the new task branch so the user can review and commit it with the project.
 
 ## Current task and checkpoints
 
@@ -77,6 +92,8 @@ Launch adapters inject the resume packet as the first interactive prompt but pre
 ## Current limits
 
 - The spike provides same-worktree continuity. Cross-machine transport still needs a safe export/import and Git push/restore protocol.
+- Repository indexing currently performs a full rebuild, and structural extraction uses built-in language heuristics.
+- Context compilation is explicit; automatic prompt injection is not yet connected to agent applications.
 - Checkpoints are explicit. Automatic lifecycle hooks have not been connected to agent applications.
 - Codex and Claude interactive CLIs accept an initial prompt. The Codex desktop `app` launcher opens a workspace but does not expose initial-prompt injection in the installed CLI, so desktop-only switching still requires opening the workspace and issuing `continue`.
 - The capsule transfers operational evidence, not provider transcripts or hidden reasoning.
@@ -85,4 +102,4 @@ Launch adapters inject the resume packet as the first interactive prompt but pre
 
 ## Verification
 
-`tests/environment-generator.test.mjs` and `tests/continuity-spike.test.mjs` use temporary Git repositories and cover safe initialization, preserved native instructions, dry-run behavior, branch isolation, checkpoint content identities, schema-valid capsules, agent switching, drift detection, duplicate-task refusal, local repository acquisition, and redacted launch construction. They never contact GitHub or start a model.
+The focused tests use temporary Git repositories and cover safe initialization, deterministic repository indexing, strict report and context contracts, bounded hybrid retrieval, preserved native instructions, branch isolation, checkpoint content identities, agent switching, drift detection, duplicate-task refusal, local repository acquisition, and redacted launch construction. They never contact GitHub or start a model.

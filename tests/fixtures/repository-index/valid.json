@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "aiviron-repository-index/v1alpha1",
+  "generatedAt": "2026-07-19T00:00:00Z",
+  "generator": { "id": "aiviron-repository-indexer", "version": "0.2.0", "profile": { "id": "hybrid-frozen-v1", "version": "1.0.0", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111" } },
+  "repository": { "projectId": "prj_01ABCDEFG", "head": "git:abcdef0123456789", "dirty": false, "branch": "main", "worktree": "/workspace/example" },
+  "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "persisted": true,
+  "indexPath": "/workspace/example/.ai/state/repository/index.sqlite",
+  "inventory": { "indexedFiles": 2, "indexedBytes": 100, "indexedChunks": 2, "symbols": 1, "edges": 0, "skipped": [{ "path": "logo.png", "reason": "unsupported-extension" }] },
+  "languages": [{ "name": "javascript", "files": 1 }],
+  "manifests": ["package.json"],
+  "commands": [{ "name": "test", "command": "npm run test", "underlying": "node --test" }],
+  "packageManager": null,
+  "workspaces": [],
+  "shape": { "monorepo": false, "hasTests": true, "hasCi": false, "hasContainers": false, "hasDocumentation": true, "topLevel": [{ "path": ".", "files": 1 }, { "path": "src", "files": 1 }] },
+  "warnings": [],
+  "performance": { "scanMs": 1.2, "indexMs": 2.3, "totalMs": 4.1 }
+}

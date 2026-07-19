@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aiviron.dev/v1alpha1/repository-index.schema.json",
+  "title": "Aiviron repository intelligence report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "generatedAt", "generator", "repository", "digest", "persisted", "indexPath", "inventory", "languages", "manifests", "commands", "packageManager", "workspaces", "shape", "warnings", "performance"],
+  "properties": {
+    "schemaVersion": { "const": "aiviron-repository-index/v1alpha1" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "profile"],
+      "properties": {
+        "id": { "const": "aiviron-repository-indexer" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "profile": { "$ref": "#/$defs/profile" }
+      }
+    },
+    "repository": { "$ref": "common.schema.json#/$defs/repositoryState" },
+    "digest": { "$ref": "common.schema.json#/$defs/digest" },
+    "persisted": { "type": "boolean" },
+    "indexPath": { "type": ["string", "null"] },
+    "inventory": { "$ref": "#/$defs/inventory" },
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "files"],
+        "properties": { "name": { "type": "string", "minLength": 1 }, "files": { "type": "integer", "minimum": 1 } }
+      }
+    },
+    "manifests": { "type": "array", "items": { "$ref": "#/$defs/repositoryPath" }, "uniqueItems": true },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "command", "underlying"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "command": { "type": "string", "minLength": 1 },
+          "underlying": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "packageManager": { "type": ["string", "null"] },
+    "workspaces": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "shape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["monorepo", "hasTests", "hasCi", "hasContainers", "hasDocumentation", "topLevel"],
+      "properties": {
+        "monorepo": { "type": "boolean" }, "hasTests": { "type": "boolean" }, "hasCi": { "type": "boolean" },
+        "hasContainers": { "type": "boolean" }, "hasDocumentation": { "type": "boolean" },
+        "topLevel": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["path", "files"],
+            "properties": { "path": { "type": "string", "minLength": 1 }, "files": { "type": "integer", "minimum": 1 } }
+          }
+        }
+      }
+    },
+    "warnings": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "performance": {
+      "type": "object", "additionalProperties": false, "required": ["scanMs", "indexMs", "totalMs"],
+      "properties": { "scanMs": { "type": "number", "minimum": 0 }, "indexMs": { "type": "number", "minimum": 0 }, "totalMs": { "type": "number", "minimum": 0 } }
+    }
+  },
+  "$defs": {
+    "repositoryPath": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$" },
+    "profile": {
+      "type": "object", "additionalProperties": false, "required": ["id", "version", "digest"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "digest": { "$ref": "common.schema.json#/$defs/digest" }
+      }
+    },
+    "inventory": {
+      "type": "object", "additionalProperties": false,
+      "required": ["indexedFiles", "indexedBytes", "indexedChunks", "symbols", "edges", "skipped"],
+      "properties": {
+        "indexedFiles": { "type": "integer", "minimum": 0 }, "indexedBytes": { "type": "integer", "minimum": 0 },
+        "indexedChunks": { "type": "integer", "minimum": 0 }, "symbols": { "type": "integer", "minimum": 0 }, "edges": { "type": "integer", "minimum": 0 },
+        "skipped": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["path", "reason"],
+            "properties": {
+              "path": { "$ref": "#/$defs/repositoryPath" },
+              "reason": { "enum": ["unsupported-extension", "symbolic-link", "not-a-file", "file-too-large", "binary-content", "missing"] },
+              "bytes": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

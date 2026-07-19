@@ -70,8 +70,14 @@ async function hashPath(repoRoot, path) {
   const absolute = resolve(repoRoot, path);
   const normalized = relative(repoRoot, absolute);
   if (normalized.startsWith(`..${sep}`) || normalized === "..") throw new Error(`Repository path escaped root: ${path}`);
-  const stat = await lstat(absolute);
   const hash = createHash("sha256");
+  let stat;
+  try {
+    stat = await lstat(absolute);
+  } catch (error) {
+    if (error.code === "ENOENT") return hash.update("missing\0").digest("hex");
+    throw error;
+  }
   if (stat.isSymbolicLink()) {
     hash.update("symlink\0");
     hash.update(await readlink(absolute));

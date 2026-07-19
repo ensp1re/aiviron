@@ -154,7 +154,7 @@ test("Aiviron CLI exposes initialization and continuity commands", async (t) => 
   assert.equal(JSON.parse(planned.stdout).dryRun, true);
 
   const version = await execFileAsync(process.execPath, [aiviron, "--version"], { encoding: "utf8" });
-  assert.equal(version.stdout.trim(), "0.1.1");
+  assert.equal(version.stdout.trim(), "0.2.0");
 
   const primary = await execFileAsync(process.execPath, [aiviron, "primary", "--dry-run"], {
     cwd: parent,

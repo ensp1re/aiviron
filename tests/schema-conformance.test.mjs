@@ -13,6 +13,7 @@ const schemaDir = join(root, "schemas", "v1alpha1");
 const schemaFiles = [
   "common.schema.json",
   "runtime-event.schema.json",
+  "repository-index.schema.json",
   "context-manifest.schema.json",
   "memory-record.schema.json",
   "action.schema.json",
@@ -23,6 +24,8 @@ const schemaFiles = [
 const cases = [
   ["runtime-event.schema.json", "runtime-event/valid.json", true],
   ["runtime-event.schema.json", "runtime-event/invalid-missing-actor.json", false],
+  ["repository-index.schema.json", "repository-index/valid.json", true],
+  ["repository-index.schema.json", "repository-index/invalid-escaped-path.json", false],
   ["context-manifest.schema.json", "context-manifest/valid.json", true],
   ["context-manifest.schema.json", "context-manifest/invalid-untrusted-instruction.json", false],
   ["memory-record.schema.json", "memory-record/valid.json", true],
