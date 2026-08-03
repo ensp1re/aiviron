@@ -9,7 +9,7 @@ import { putObject, writeJsonAtomic, writeTextAtomic } from "./store.mjs";
 import { checkpointTask, handoffTask, renderResumePacket, taskStatus } from "./task-service.mjs";
 
 const runtimeVersion = "0.4.0";
-const supportedPurposes = new Set(["plan", "implement", "review", "debug", "handoff", "evaluate"]);
+const supportedPurposes = new Set(["plan", "implement", "review", "debug", "handoff", "evaluate", "document"]);
 
 function continuationPrefix({ task, status, agent, purpose }) {
   const projected = { ...task, currentAgent: agent };

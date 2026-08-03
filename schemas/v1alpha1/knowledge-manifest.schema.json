@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aiviron.dev/v1alpha1/knowledge-manifest.schema.json",
+  "title": "Aiviron reusable project knowledge manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "generatedBy", "generatedAt", "updatedAt", "projectId", "docsRoot", "documents"],
+  "properties": {
+    "schemaVersion": { "const": "aiviron-knowledge-manifest/v1alpha1" },
+    "generatedBy": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "projectId": { "$ref": "common.schema.json#/$defs/opaqueId" },
+    "docsRoot": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "module", "title", "ownership", "status", "confidence", "sources"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$" },
+          "module": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "ownership": { "enum": ["aiviron", "human"] },
+          "status": { "enum": ["generated", "reviewed", "stale", "orphaned"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "digest"],
+              "properties": {
+                "path": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$" },
+                "digest": { "$ref": "common.schema.json#/$defs/digest" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

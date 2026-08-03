@@ -11,7 +11,7 @@ function deepFreeze(value) {
 export const retrievalProfile = deepFreeze({
   schemaVersion: "aiviron-retrieval-profile/v1alpha1",
   profileId: "hybrid-frozen-v1",
-  profileVersion: "1.0.0",
+  profileVersion: "1.1.0",
   lexical: {
     chunkLines: 20,
     overlapLines: 4,
@@ -19,7 +19,9 @@ export const retrievalProfile = deepFreeze({
     contentWeight: 1,
     normalizedWeight: 0.35,
     generatedPenalty: 0.2,
-    documentationPenalty: 0.65
+    documentationPenalty: 0.65,
+    freshProjectKnowledgePenalty: 1,
+    staleProjectKnowledgePenalty: 0.2
   },
   structural: {
     symbolWeight: 4,
@@ -37,6 +39,9 @@ export const retrievalProfile = deepFreeze({
     instructionAuthority: 1.2,
     generatedAuthority: 0.15,
     documentationAuthority: 0.25,
+    generatedProjectKnowledgeAuthority: 0.75,
+    reviewedProjectKnowledgeAuthority: 0.95,
+    staleProjectKnowledgeAuthority: 0.1,
     manifestAuthority: 0.65
   }
 });

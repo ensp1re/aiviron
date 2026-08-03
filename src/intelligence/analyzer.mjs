@@ -15,16 +15,19 @@ const execFileAsync = promisify(execFile);
 const indexVersion = "0.2.0";
 
 const languageExtensions = new Map([
-  [".c", "c"], [".cc", "cpp"], [".cpp", "cpp"], [".cs", "csharp"], [".go", "go"],
+  [".c", "c"], [".cc", "cpp"], [".cpp", "cpp"], [".cs", "csharp"], [".dart", "dart"],
+  [".ex", "elixir"], [".exs", "elixir"], [".fs", "fsharp"], [".fsx", "fsharp"], [".go", "go"],
   [".h", "c-header"], [".hpp", "cpp-header"], [".java", "java"], [".js", "javascript"],
-  [".jsx", "javascript"], [".kt", "kotlin"], [".kts", "kotlin"], [".mjs", "javascript"],
+  [".jsx", "javascript"], [".kt", "kotlin"], [".kts", "kotlin"], [".lua", "lua"], [".mjs", "javascript"],
   [".php", "php"], [".py", "python"], [".rb", "ruby"], [".rs", "rust"], [".swift", "swift"],
-  [".ts", "typescript"], [".tsx", "typescript"]
+  [".r", "r"], [".scala", "scala"], [".svelte", "svelte"], [".ts", "typescript"],
+  [".tsx", "typescript"], [".vue", "vue"]
 ]);
 
 const manifestNames = new Set([
   "package.json", "pyproject.toml", "requirements.txt", "Cargo.toml", "go.mod", "go.work",
-  "Gemfile", "pom.xml", "build.gradle", "build.gradle.kts", "composer.json"
+  "Gemfile", "pom.xml", "build.gradle", "build.gradle.kts", "composer.json", "mix.exs",
+  "pubspec.yaml", "Package.swift", "build.sbt"
 ]);
 
 const symbolPatterns = {

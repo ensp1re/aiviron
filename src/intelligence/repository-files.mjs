@@ -6,13 +6,15 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 
 const searchableExtensions = new Set([
-  "", ".c", ".cc", ".cpp", ".cs", ".css", ".go", ".h", ".hpp", ".html", ".java",
-  ".js", ".json", ".jsx", ".kt", ".kts", ".md", ".mjs", ".php", ".py", ".rb",
-  ".rs", ".sh", ".sql", ".swift", ".toml", ".ts", ".tsx", ".txt", ".xml", ".yaml", ".yml"
+  "", ".c", ".cc", ".conf", ".cpp", ".cs", ".css", ".dart", ".ex", ".exs", ".fs", ".fsx",
+  ".go", ".gql", ".gradle", ".graphql", ".h", ".hcl", ".hpp", ".html", ".java", ".js",
+  ".json", ".jsx", ".kt", ".kts", ".lua", ".md", ".mjs", ".php", ".prisma", ".properties",
+  ".proto", ".py", ".r", ".rb", ".rs", ".scala", ".sh", ".sql", ".svelte", ".swift", ".tf",
+  ".toml", ".ts", ".tsx", ".txt", ".vue", ".xml", ".yaml", ".yml"
 ]);
 
 const knownTextNames = new Set([
-  "Dockerfile", "Gemfile", "Makefile", "Procfile", "Rakefile", "Justfile"
+  "Dockerfile", "Gemfile", "Justfile", "Makefile", "Procfile", "Rakefile", "mix.exs"
 ]);
 
 function portablePath(root, absolute) {

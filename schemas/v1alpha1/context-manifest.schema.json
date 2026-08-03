@@ -42,7 +42,7 @@
     },
     "purpose": {
       "type": "string",
-      "enum": ["plan", "implement", "review", "debug", "handoff", "evaluate"]
+      "enum": ["plan", "implement", "review", "debug", "handoff", "evaluate", "document"]
     },
     "budget": {
       "type": "object",

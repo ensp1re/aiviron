@@ -1,6 +1,6 @@
 {
   "name": "aiviron",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
   "description": "A shared project workspace for better AI-assisted development",
   "keywords": [
@@ -29,7 +29,8 @@
     "src/",
     "schemas/",
     "docs/workflow.md",
-    "docs/continuity-spike.md"
+    "docs/continuity-spike.md",
+    "docs/project-knowledge.md"
   ],
   "bin": {
     "aiviron": "bin/aiviron.mjs"
@@ -38,7 +39,8 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node --test tests/environment-generator.test.mjs tests/continuity-spike.test.mjs tests/repository-context.test.mjs tests/continuation-workflow.test.mjs tests/harness-loop.test.mjs tests/schema-conformance.test.mjs",
+    "test": "node --test tests/environment-generator.test.mjs tests/continuity-spike.test.mjs tests/repository-context.test.mjs tests/continuation-workflow.test.mjs tests/harness-loop.test.mjs tests/schema-conformance.test.mjs tests/knowledge-docs.test.mjs",
+    "test:knowledge": "node --test tests/knowledge-docs.test.mjs",
     "prepublishOnly": "npm test",
     "test:schemas": "node --test tests/schema-conformance.test.mjs",
     "aiviron": "node bin/aiviron.mjs"

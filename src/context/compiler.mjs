@@ -1,4 +1,4 @@
-import { lstat, mkdir } from "node:fs/promises";
+import { lstat, mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
 
@@ -10,7 +10,7 @@ import { estimateTokens, searchTokens } from "./tokens.mjs";
 import { bindContextScope, scopeFilesFromContext } from "./scope.mjs";
 
 const compilerVersion = "0.4.0";
-const supportedPurposes = new Set(["plan", "implement", "review", "debug", "handoff", "evaluate"]);
+const supportedPurposes = new Set(["plan", "implement", "review", "debug", "handoff", "evaluate", "document"]);
 
 function overlapCount(left, right) {
   let count = 0;
@@ -22,13 +22,24 @@ function ftsQuery(tokens) {
   return tokens.slice(0, retrievalProfile.lexical.maxQueryTerms).map((token) => `"${token.replaceAll('"', '""')}"`).join(" OR ");
 }
 
-function sourcePenalty(path) {
+function knowledgeRecord(path, knowledge) {
+  return knowledge.get(path) ?? null;
+}
+
+function sourcePenalty(path, knowledge) {
+  const record = knowledgeRecord(path, knowledge);
+  if (record) return record.fresh ? retrievalProfile.lexical.freshProjectKnowledgePenalty : retrievalProfile.lexical.staleProjectKnowledgePenalty;
   if (/(^|\/)(generated|vendor|dist|build)(\/|$)/i.test(path)) return retrievalProfile.lexical.generatedPenalty;
   if (/(^|\/)(docs?)(\/|$)|(?:legacy|obsolete|stale)/i.test(path)) return retrievalProfile.lexical.documentationPenalty;
   return 1;
 }
 
-function authorityWeight(path) {
+function authorityWeight(path, knowledge) {
+  const record = knowledgeRecord(path, knowledge);
+  if (record) {
+    if (!record.fresh) return retrievalProfile.hybrid.staleProjectKnowledgeAuthority;
+    return record.ownership === "human" ? retrievalProfile.hybrid.reviewedProjectKnowledgeAuthority : retrievalProfile.hybrid.generatedProjectKnowledgeAuthority;
+  }
   if (path === "AGENTS.md" || /^(?:CLAUDE|GEMINI)\.md$/.test(path)) return retrievalProfile.hybrid.instructionAuthority;
   if (/(^|\/)(generated|vendor|dist|build)(\/|$)/i.test(path)) return retrievalProfile.hybrid.generatedAuthority;
   if (/(^|\/)(docs?)(\/|$)|(?:legacy|obsolete|stale)/i.test(path)) return retrievalProfile.hybrid.documentationAuthority;
@@ -51,7 +62,7 @@ function fileContent(db, path, startLine, endLine) {
   return { content, startLine: boundedStart, endLine: boundedEnd, authority: row.authority, language: row.language };
 }
 
-function lexicalCandidates(db, queryTokens) {
+function lexicalCandidates(db, queryTokens, knowledge) {
   const query = ftsQuery(queryTokens);
   if (!query) return [];
   return db.prepare(`
@@ -69,12 +80,12 @@ function lexicalCandidates(db, queryTokens) {
     content: row.content,
     estimatedTokens: estimateTokens(row.content),
     source: "lexical",
-    reasons: ["lexical match"],
-    rank: Number(row.rank) * sourcePenalty(row.path)
+    reasons: ["lexical match", ...(knowledgeRecord(row.path, knowledge) ? [knowledgeRecord(row.path, knowledge).fresh ? "fresh reusable project knowledge" : "stale reusable project knowledge"] : [])],
+    rank: Number(row.rank) * sourcePenalty(row.path, knowledge)
   })).sort((left, right) => left.rank - right.rank || left.path.localeCompare(right.path) || left.startLine - right.startLine);
 }
 
-function structuralCandidates(db, queryTokens) {
+function structuralCandidates(db, queryTokens, knowledge) {
   const querySet = new Set(queryTokens);
   const fileScores = new Map();
   const candidates = [];
@@ -152,10 +163,13 @@ function structuralCandidates(db, queryTokens) {
       score: retrievalProfile.structural.dependencyNeighborBoost
     });
   }
-  return candidates.sort((left, right) => right.score - left.score || left.estimatedTokens - right.estimatedTokens || left.path.localeCompare(right.path) || left.startLine - right.startLine);
+  return candidates.map((candidate) => ({
+    ...candidate,
+    reasons: [...candidate.reasons, ...(knowledgeRecord(candidate.path, knowledge) ? [knowledgeRecord(candidate.path, knowledge).fresh ? "fresh reusable project knowledge" : "stale reusable project knowledge"] : [])]
+  })).sort((left, right) => right.score - left.score || left.estimatedTokens - right.estimatedTokens || left.path.localeCompare(right.path) || left.startLine - right.startLine);
 }
 
-function fuse(lexical, structural) {
+function fuse(lexical, structural, knowledge) {
   const records = new Map();
   const lists = [lexical, structural];
   const exactKeys = lists.map((list) => new Set(list.map(candidateKey)));
@@ -181,12 +195,30 @@ function fuse(lexical, structural) {
   });
   const ranked = [...records.values()].map((record) => ({
     ...record.candidate,
-    score: record.score * authorityWeight(record.candidate.path),
+    score: record.score * authorityWeight(record.candidate.path, knowledge),
     source: record.sources.size > 1 ? "hybrid" : [...record.sources][0],
     reasons: [...record.reasons]
   })).sort((left, right) => right.score - left.score || left.estimatedTokens - right.estimatedTokens || left.path.localeCompare(right.path) || left.startLine - right.startLine);
   const maximum = ranked[0]?.score || 1;
   return ranked.map((candidate) => ({ ...candidate, normalizedScore: candidate.score / maximum }));
+}
+
+async function loadProjectKnowledge(db, repoRoot) {
+  let manifest;
+  try {
+    manifest = JSON.parse(await readFile(join(repoRoot, ".ai", "knowledge", "manifest.json"), "utf8"));
+  } catch (error) {
+    if (error.code === "ENOENT" || error instanceof SyntaxError) return new Map();
+    throw error;
+  }
+  const knowledge = new Map();
+  for (const document of manifest.documents ?? []) {
+    const file = db.prepare("SELECT digest FROM files WHERE path = ?").get(document.path);
+    if (!file) continue;
+    const fresh = document.ownership === "human" || (document.sources ?? []).every((source) => db.prepare("SELECT digest FROM files WHERE path = ?").get(source.path)?.digest === source.digest);
+    knowledge.set(document.path, { fresh, ownership: document.ownership, status: document.status });
+  }
+  return knowledge;
 }
 
 function instructionPaths(agent) {
@@ -342,9 +374,10 @@ export async function compileContext({
     if (!await stateIsReady(report.repository.worktree)) throw new Error("Run aiviron init before building persistent context");
     const request = await resolveRequest(report.repository.worktree, explicitQuery);
     const queryTokens = searchTokens(request.queryText);
-    const lexical = lexicalCandidates(db, queryTokens);
-    const structural = structuralCandidates(db, queryTokens);
-    const fused = fuse(lexical, structural);
+    const knowledge = await loadProjectKnowledge(db, report.repository.worktree);
+    const lexical = lexicalCandidates(db, queryTokens, knowledge);
+    const structural = structuralCandidates(db, queryTokens, knowledge);
+    const fused = fuse(lexical, structural, knowledge);
     const mandatory = [...mandatoryCandidates(db, agent), ...expandedCandidates(db, request.task?.contextScope?.expansions)];
     const header = renderHeader({ query: request.query, repository: report.repository, agent, purpose, strategy: "rrf-fusion", profile: retrievalProfileRef, task: request.task });
     const packed = packCandidates({ header, mandatory, ranked: fused, budgetTokens: budget });
@@ -359,7 +392,7 @@ export async function compileContext({
       items.push({
         id: stableOpaqueId("item", `${contextId}:${candidateKey(candidate)}`),
         source: repoUri(candidate.path),
-        kind: instruction ? "project-instructions" : "repository-evidence",
+        kind: instruction ? "project-instructions" : knowledge.has(candidate.path) ? "project-knowledge" : "repository-evidence",
         trust: instruction ? "trusted" : "mixed",
         sensitivity: "internal",
         instruction,
@@ -374,10 +407,12 @@ export async function compileContext({
     }
     const rendering = await putObject(report.repository.worktree, packed.rendering, "text/markdown");
     const instructionIds = items.filter((item) => item.instruction).map((item) => item.id);
-    const evidenceIds = items.filter((item) => !item.instruction).map((item) => item.id);
+    const knowledgeIds = items.filter((item) => item.kind === "project-knowledge").map((item) => item.id);
+    const evidenceIds = items.filter((item) => !item.instruction && item.kind !== "project-knowledge").map((item) => item.id);
     const sections = [];
     if (instructionIds.length) sections.push({ id: "project-policy", order: 0, mandatory: true, itemIds: instructionIds, tokenEstimate: items.filter((item) => item.instruction).reduce((sum, item) => sum + item.tokenEstimate, 0) });
-    if (evidenceIds.length) sections.push({ id: "repository-evidence", order: 1, mandatory: false, itemIds: evidenceIds, tokenEstimate: items.filter((item) => !item.instruction).reduce((sum, item) => sum + item.tokenEstimate, 0) });
+    if (knowledgeIds.length) sections.push({ id: "project-knowledge", order: 1, mandatory: false, itemIds: knowledgeIds, tokenEstimate: items.filter((item) => item.kind === "project-knowledge").reduce((sum, item) => sum + item.tokenEstimate, 0) });
+    if (evidenceIds.length) sections.push({ id: "repository-evidence", order: 2, mandatory: false, itemIds: evidenceIds, tokenEstimate: items.filter((item) => !item.instruction && item.kind !== "project-knowledge").reduce((sum, item) => sum + item.tokenEstimate, 0) });
     const scopeFiles = scopeFilesFromContext(items, request.task?.contextScope?.expansions || []);
     const manifest = {
       apiVersion: "dev.aiviron/v1alpha1",
@@ -402,7 +437,8 @@ export async function compileContext({
       renderings: [{ adapter: agent, content: rendering, tokenCount: packed.usedTokens }],
       warnings: [
         ...(report.repository.dirty ? ["Repository is dirty; evidence is bound to the recorded dirty digest."] : []),
-        ...(report.inventory.skipped.length ? [`${report.inventory.skipped.length} repository entries were skipped by indexing policy.`] : [])
+        ...(report.inventory.skipped.length ? [`${report.inventory.skipped.length} repository entries were skipped by indexing policy.`] : []),
+        ...(packed.selected.some((candidate) => knowledge.get(candidate.path)?.fresh === false) ? ["Selected project knowledge is stale; verify it against source evidence before relying on it."] : [])
       ]
     };
     const contextDirectory = join(report.repository.worktree, ".ai", "state", "context");

@@ -58,6 +58,7 @@ Aiviron adds a small provider-neutral workspace without overwriting existing hum
 ├── README.md
 ├── config.yaml
 ├── context/
+├── knowledge/      reusable documentation policy and provenance
 ├── repository/
 ├── sessions/
 └── state/          local, ignored runtime state
@@ -77,8 +78,33 @@ The generated environment provides:
 - verification receipts bound to the exact repository state;
 - durable checkpoints, decisions, failures, and next actions;
 - portable session and agent handoffs.
+- adaptive, source-controlled project knowledge.
 
 Mutable state and compiled packets remain under `.ai/state/` and are excluded from Git. The stable environment configuration and instruction files can be committed so every agent sees the same project contract.
+
+## Reusable project knowledge
+
+Task context is local and temporary. Project knowledge is reusable: Aiviron can select documentation from the detected repository stack and store it under `docs/ai/` so it can be committed and shared.
+
+The documentation structure is adaptive. Aiviron always considers an overview and architecture map, then adds only supported areas such as APIs, user interfaces, data, CLI behavior, library APIs, deployment, operations, security, integrations, and testing. It does not assume a frontend/backend project structure.
+
+Agents operate the documentation protocol automatically. The lower-level commands are also available for diagnostics:
+
+```bash
+# Preview the documents selected from repository evidence
+npx aiviron docs plan
+
+# Create missing managed documents without overwriting human files
+npx aiviron docs init
+
+# Refresh source evidence for affected documents
+npx aiviron docs update --changed
+
+# Find missing, incomplete, stale, or orphaned documents
+npx aiviron docs check
+```
+
+`.ai/knowledge/manifest.json` records document ownership and source digests. Aiviron updates only its managed evidence blocks. Human-owned files and agent-authored guidance outside those blocks remain unchanged.
 
 ## Context efficiency
 
@@ -96,6 +122,9 @@ npx aiviron inspect
 
 # Explain what entered the bounded context
 npx aiviron context build --task "Trace session expiration" --explain
+
+# Inspect reusable project documentation
+npx aiviron docs check
 
 # Validate that changed files remain inside the active scope
 npx aiviron context check

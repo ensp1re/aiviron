@@ -15,6 +15,7 @@ Usage:
   aiviron [directory] [--agents codex,claude] [--name <name>] [--dry-run]
   aiviron init [directory] [--agents codex,claude] [--name <name>] [--dry-run]
   aiviron inspect [--json]
+  aiviron docs <plan|init|update|check> [--root <path>] [--changed] [--dry-run] [--json]
   aiviron context build [--task <text>] [--budget <tokens>] [--for <agent>] [--explain|--json]
   aiviron context add --file <path> --reason <why>
   aiviron context check [--json]
@@ -38,7 +39,7 @@ if (args[0] === "--version" || args[0] === "-v") {
   process.exit(0);
 }
 
-const continuityCommand = ["inspect", "context", "verify", "continue", "switch", "work", "task"].includes(args[0]);
+const continuityCommand = ["inspect", "docs", "context", "verify", "continue", "switch", "work", "task"].includes(args[0]);
 const script = join(directory, continuityCommand ? "continuity.mjs" : "init.mjs");
 const forwardedArgs = args[0] === "init" ? args.slice(1) : args;
 const result = spawnSync(process.execPath, [script, ...forwardedArgs], { stdio: "inherit" });

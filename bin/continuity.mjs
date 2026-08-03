@@ -17,6 +17,8 @@ import { inspectRepository } from "../src/intelligence/analyzer.mjs";
 import { continueTask, switchTask } from "../src/continuity/continuation-service.mjs";
 import { addContextExpansion, checkContextScope } from "../src/context/scope.mjs";
 import { verifyTask } from "../src/harness/verification.mjs";
+import { planDocumentation } from "../src/knowledge/planner.mjs";
+import { checkDocumentation, generateDocumentation } from "../src/knowledge/service.mjs";
 
 function parse(argv) {
   const [command, ...tokens] = argv;
@@ -28,7 +30,7 @@ function parse(argv) {
       continue;
     }
     const key = token.slice(2);
-    if (["no-branch", "no-launch", "json", "launch", "dry-run", "help", "explain", "no-cache"].includes(key)) {
+    if (["no-branch", "no-launch", "json", "launch", "dry-run", "help", "explain", "no-cache", "changed"].includes(key)) {
       options[key] = true;
       continue;
     }
@@ -63,6 +65,10 @@ function continuityUsage() {
 Usage:
   aiviron init [directory] [--agents codex,claude] [--name <name>] [--dry-run]
   aiviron inspect [--json] [--no-cache]
+  aiviron docs plan [--root <path>] [--json]
+  aiviron docs init [--root <path>] [--dry-run] [--json]
+  aiviron docs update [--root <path>] [--changed] [--dry-run] [--json]
+  aiviron docs check [--root <path>] [--json]
   aiviron context build [--task <text>] [--budget <tokens>] [--for codex|claude|gemini] [--purpose <mode>] [--explain|--json]
   aiviron context add --file <path> --reason <why> [--budget <tokens>] [--for <agent>]
   aiviron context check [--json]
@@ -109,6 +115,22 @@ function renderInspection(report) {
   return `Aiviron repository inspection\n\nRoot: ${report.repository.worktree}\nRevision: ${report.repository.head}\nBranch: ${report.repository.branch ?? "detached"}\nDirty: ${report.repository.dirty}\nFiles: ${report.inventory.indexedFiles} (${report.inventory.indexedChunks} chunks)\nSymbols: ${report.inventory.symbols}\nDependency edges: ${report.inventory.edges}\nLanguages: ${languages}\nMonorepo: ${report.shape.monorepo}\nTests: ${report.shape.hasTests}\nCI: ${report.shape.hasCi}\nContainers: ${report.shape.hasContainers}\nIndex: ${report.persisted ? report.indexPath : "in-memory"}\n\nCommands:\n${commands}\n`;
 }
 
+function renderDocumentationPlan(plan) {
+  const capabilities = plan.capabilities.length ? plan.capabilities.map((item) => `  ${item.id}: ${Math.round(item.confidence * 100)}%`).join("\n") : "  none detected";
+  const documents = plan.documents.map((item) => `  ${item.path}: ${item.reason}`).join("\n");
+  return `Aiviron adaptive documentation plan\n\nRoot: ${plan.docsRoot}\nCapabilities:\n${capabilities}\n\nDocuments:\n${documents}\n`;
+}
+
+function renderDocumentationResult(result) {
+  const files = result.files.map((item) => `  ${item.action}: ${item.path}${item.ownership === "human" ? " (human-owned)" : ""}`).join("\n");
+  return `Aiviron project knowledge ${result.dryRun ? "preview" : "updated"}\n\nRoot: ${result.plan.docsRoot}\nManifest: ${result.manifestAction}\n${files}\n`;
+}
+
+function renderDocumentationCheck(result) {
+  if (result.ok) return `Project knowledge is fresh (${result.summary.fresh}/${result.summary.documents} documents).\n`;
+  return `Project knowledge needs attention (${result.issues.length} issues):\n${result.issues.map((item) => `  ${item.type}: ${item.document}${item.source ? ` <- ${item.source}` : ""}`).join("\n")}\n`;
+}
+
 async function main() {
   const { command, options } = parse(process.argv.slice(2));
   if (options.help) {
@@ -142,6 +164,31 @@ async function main() {
     const report = await inspectRepository({ persist: !options["no-cache"] });
     process.stdout.write(options.json ? `${JSON.stringify(report, null, 2)}\n` : renderInspection(report));
     return;
+  }
+  if (command === "docs") {
+    const subcommand = options._.shift();
+    if (subcommand === "plan") {
+      const result = await planDocumentation({ docsRoot: options.root });
+      process.stdout.write(options.json ? `${JSON.stringify(result, null, 2)}\n` : renderDocumentationPlan(result));
+      return;
+    }
+    if (subcommand === "init" || subcommand === "update") {
+      const result = await generateDocumentation({
+        docsRoot: options.root,
+        update: subcommand === "update",
+        changedOnly: Boolean(options.changed),
+        dryRun: Boolean(options["dry-run"])
+      });
+      process.stdout.write(options.json ? `${JSON.stringify(result, null, 2)}\n` : renderDocumentationResult(result));
+      return;
+    }
+    if (subcommand === "check") {
+      const result = await checkDocumentation({ docsRoot: options.root });
+      process.stdout.write(options.json ? `${JSON.stringify(result, null, 2)}\n` : renderDocumentationCheck(result));
+      if (!result.ok) process.exitCode = 2;
+      return;
+    }
+    throw new Error(continuityUsage());
   }
   if (command === "context") {
     const subcommand = options._.shift();
