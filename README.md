@@ -2,6 +2,8 @@
 
 **A ready-to-use workspace for AI coding agents.**
 
+[![npm version](https://img.shields.io/npm/v/aiviron.svg)](https://www.npmjs.com/package/aiviron)
+
 Aiviron prepares any Git repository so Codex, Claude, and other coding agents can understand the project, work with focused context, verify changes, preserve progress, and continue across tools or sessions.
 
 It does not replace your AI application. It improves the environment around it.
@@ -12,7 +14,14 @@ Requires Git and Node.js 22.13 or newer.
 
 ```bash
 cd your-repository
-npx aiviron .
+npx aiviron@latest .
+```
+
+Using `@latest` avoids running an older cached release. If you prefer a global command:
+
+```bash
+npm install --global aiviron@latest
+aiviron .
 ```
 
 Then open the repository in your preferred AI coding tool and prompt normally:
@@ -77,7 +86,7 @@ The generated environment provides:
 - acceptance criteria and focused execution plans;
 - verification receipts bound to the exact repository state;
 - durable checkpoints, decisions, failures, and next actions;
-- portable session and agent handoffs.
+- portable session and agent handoffs;
 - adaptive, source-controlled project knowledge.
 
 Mutable state and compiled packets remain under `.ai/state/` and are excluded from Git. The stable environment configuration and instruction files can be committed so every agent sees the same project contract.
